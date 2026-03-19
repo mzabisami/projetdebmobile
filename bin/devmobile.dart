@@ -11,7 +11,7 @@ ArgParser buildParser() {
       help: 'Print this usage information.',
     )
     ..addFlag(
-      'verbose',#sami
+      'verbose',#samih
       abbr: 'v',
       negatable: false,
       help: 'Show additional command output.',
