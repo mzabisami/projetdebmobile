@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
 
 
 class CartePage extends StatefulWidget {
@@ -12,6 +11,11 @@ class CartePage extends StatefulWidget {
 }
 
 class _CartePageState extends State<CartePage> {
+  List<ZoneDanger> zonesDanger = [
+    ZoneDanger(LatLng(50.361, 3.465), 200, 1),
+    ZoneDanger(LatLng(50.371, 3.5), 200, 2),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,7 +30,7 @@ class _CartePageState extends State<CartePage> {
             _trajetCard("D'où partez-vous ?"),
             _trajetCard('Où voulez-vous aller ?'),
 
-            _carte([50.361, 3.465], [60, 10]),
+            _carte([50.361, 3.465], [50.371, 3.5], zonesDanger),
             _barreNavigation(),
           ],
         ),
@@ -35,7 +39,15 @@ class _CartePageState extends State<CartePage> {
   }
 }
 
-Widget _carte(List depart, List arrivee) {
+class ZoneDanger {
+  final LatLng point;
+  final double radius;
+  final int niveau;
+
+  ZoneDanger(this.point, this.radius, this.niveau);
+}
+
+Widget _carte(List depart, List arrivee, List<ZoneDanger> zonesDanger) {
   return Expanded(
     child: FlutterMap(
       mapController: MapController(),
@@ -53,7 +65,7 @@ Widget _carte(List depart, List arrivee) {
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: 'com.example.projetdevmobile',
         ),
-        
+
         MarkerLayer(markers: [
             Marker(
               width: 80.0,
@@ -70,6 +82,27 @@ Widget _carte(List depart, List arrivee) {
             ),
           ]
         ),
+
+        CircleLayer(circles: [
+          for (int i = 0; i < zonesDanger.length; i++) 
+            CircleMarker(
+              point: zonesDanger[i].point,
+              radius: zonesDanger[i].radius,
+              useRadiusInMeter: true,
+              color: 
+                zonesDanger[i].niveau == 1 ? Colors.red.withOpacity(0.5) :
+                zonesDanger[i].niveau == 2 ? Colors.orange.withOpacity(0.5) :
+                Colors.yellow.withOpacity(0.5),
+            ),
+        ]),
+
+        PolylineLayer(polylines: [
+          Polyline(
+            points: [LatLng(depart[0], depart[1]), LatLng(arrivee[0], arrivee[1])],
+            strokeWidth: 4.0,
+            color: Colors.blue,
+          ),
+        ]),
       ],
     ),
   );
@@ -86,6 +119,15 @@ Widget _trajetCard(String texte) {
         ),
       ],
     ),
+  );
+}
+
+CircleMarker zoneDanger(LatLng point, ) {
+  return CircleMarker(
+    point: point,
+    radius: 200,
+    useRadiusInMeter: true,
+    color: const Color.fromARGB(255, 244, 114, 54).withOpacity(0.5),
   );
 }
 
