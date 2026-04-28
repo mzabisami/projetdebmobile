@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'theme.dart';
+
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 
 class CartePage extends StatefulWidget {
@@ -11,26 +15,107 @@ class CartePage extends StatefulWidget {
 }
 
 class _CartePageState extends State<CartePage> {
+  final MapController _mapController = MapController();
+  final TextEditingController _departController = TextEditingController();
+  final TextEditingController _arriveeController = TextEditingController();
+
   List<ZoneDanger> zonesDanger = [
-    ZoneDanger(LatLng(50.361, 3.465), 200, 1),
-    ZoneDanger(LatLng(50.371, 3.5), 200, 2),
+    ZoneDanger(LatLng(50.381, 3.475), 200, 1),
+    ZoneDanger(LatLng(50.361, 3.485), 200, 2),
+    ZoneDanger(LatLng(50.374, 3.465), 300, 3),
   ];
+  LatLng? depart = LatLng(50.361, 3.465);
+  LatLng? arrivee;
+  List<LatLng>? trajet;
+  String modeTransport = 'foot'; // 'car', 'bike', 'foot'
+
+  @override
+  void dispose() {
+    _departController.dispose();
+    _arriveeController.dispose();
+    super.dispose();
+  }
+
+  Future<void> rechercherVille(String ville, bool estDepart) async {
+    String villeTrim = ville.trim();
+    if (villeTrim.isEmpty) return;
+
+    final url = Uri.parse('https://nominatim.openstreetmap.org/search?q=$ville&format=json');
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        
+        if (data.isNotEmpty) {
+          final lat = double.parse(data[0]['lat']);
+          final lon = double.parse(data[0]['lon']);
+          
+          setState(() {
+            if (estDepart) {
+              depart = LatLng(lat, lon);
+            } else {
+              arrivee = LatLng(lat, lon);
+            }
+            _mapController.move(LatLng(lat, lon), 15.0);
+          });
+          
+          calculerTrajet();
+        }
+      }
+    } catch (e) {
+      print('Erreur lors de la recherche de la ville : $e');
+    }
+  }
+
+  Future<void> calculerTrajet() async {
+    if (depart == null || arrivee == null) return;
+    
+    final url = Uri.parse('https://routing.openstreetmap.de/routed-$modeTransport/route/v1/driving/'
+        '${depart!.longitude},${depart!.latitude};${arrivee!.longitude},${arrivee!.latitude}?overview=full&geometries=geojson'
+    );
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['routes'] != null && data['routes'].isNotEmpty) {
+          final coords = data['routes'][0]['geometry']['coordinates'];
+
+          setState(() {
+            trajet = coords.map<LatLng>((point) => LatLng(point[1], point[0])).toList();
+          });
+        }
+      }
+    } catch (e) {
+      print('Erreur lors du calcul du trajet : $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('EcoSafe - Valenciennes', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-        backgroundColor: const Color.fromARGB(255, 58, 183, 131),
+        title: const Text('EcoSafe', style: TextStyle(color: AppColors.text, fontSize: 24, fontWeight: FontWeight.bold)),
+        backgroundColor: AppColors.primary,
       ),
       body: Center(
         child: Column(
           children: [
+            TextCard("D'où partez-vous ?", 
+                    const Icon(Icons.my_location), 
+                    _departController,
+                    onValider: (valeur) => rechercherVille(valeur, true)
+            ),
+            TextCard('Où voulez-vous aller ?', 
+                    const Icon(Icons.location_pin), 
+                    _arriveeController, 
+                    onValider: (valeur) => rechercherVille(valeur, false)
+            ),
 
-            _trajetCard("D'où partez-vous ?"),
-            _trajetCard('Où voulez-vous aller ?'),
-
-            _carte([50.361, 3.465], [50.371, 3.5], zonesDanger),
+            _carte(depart, arrivee, zonesDanger, trajet, _mapController),
             _barreNavigation(),
           ],
         ),
@@ -47,18 +132,24 @@ class ZoneDanger {
   ZoneDanger(this.point, this.radius, this.niveau);
 }
 
-Widget _carte(List depart, List arrivee, List<ZoneDanger> zonesDanger) {
+Widget _carte(LatLng? depart, LatLng? arrivee, List<ZoneDanger> zonesDanger, List<LatLng>? trajet, MapController mapController) {
   return Expanded(
     child: FlutterMap(
-      mapController: MapController(),
+      mapController: mapController,
       options: MapOptions(
-        initialCenter: LatLng((depart[0]+arrivee[0])/2, (depart[1]+arrivee[1])/2),
+        initialCenter: (depart != null && arrivee != null) 
+          ? LatLng((depart.latitude + arrivee.latitude) / 2, (depart.longitude + arrivee.longitude) / 2)
+          : LatLng(50.361, 3.465),
         initialZoom: 13.0,
-        minZoom: 5.0,
-        maxZoom: 20.0,
+        minZoom: 6.0,
+        maxZoom: 30.0,
         interactionOptions: const InteractionOptions(
-          flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag | InteractiveFlag.doubleTapZoom,
+          flags: InteractiveFlag.all,
         ),
+        
+        onLongPress: (tapPosition, point) {
+          mapController.move(mapController.camera.center, mapController.camera.zoom-2); // Permet de réinitialiser le focus sur la carte après un tap
+        },
       ),
       children: [
         TileLayer(
@@ -66,23 +157,7 @@ Widget _carte(List depart, List arrivee, List<ZoneDanger> zonesDanger) {
           userAgentPackageName: 'com.example.projetdevmobile',
         ),
 
-        MarkerLayer(markers: [
-            Marker(
-              width: 80.0,
-              height: 80.0,
-              point: LatLng(depart[0], depart[1]),
-              child: Icon(Icons.my_location, color: Colors.blue, size: 40.0),
-            ),
-
-            Marker(
-              width: 80.0,
-              height: 80.0,
-              point: LatLng(arrivee[0], arrivee[1]),
-              child: Icon(Icons.location_pin, color: Colors.red, size: 40.0),
-            ),
-          ]
-        ),
-
+        // Zones de danger
         CircleLayer(circles: [
           for (int i = 0; i < zonesDanger.length; i++) 
             CircleMarker(
@@ -90,50 +165,78 @@ Widget _carte(List depart, List arrivee, List<ZoneDanger> zonesDanger) {
               radius: zonesDanger[i].radius,
               useRadiusInMeter: true,
               color: 
+                // ignore: deprecated_member_use
                 zonesDanger[i].niveau == 1 ? Colors.red.withOpacity(0.5) :
+                // ignore: deprecated_member_use
                 zonesDanger[i].niveau == 2 ? Colors.orange.withOpacity(0.5) :
+                // ignore: deprecated_member_use
                 Colors.yellow.withOpacity(0.5),
             ),
         ]),
 
-        PolylineLayer(polylines: [
-          Polyline(
-            points: [LatLng(depart[0], depart[1]), LatLng(arrivee[0], arrivee[1])],
-            strokeWidth: 4.0,
-            color: Colors.blue,
-          ),
-        ]),
-      ],
-    ),
-  );
-}
+        // Trajet
+        if (trajet != null && trajet.isNotEmpty)
+          PolylineLayer(polylines: [
+            Polyline(
+              points: trajet,
+              strokeWidth: 4.0,
+              color: Colors.blue,
+            ),
+          ]),
 
-Widget _trajetCard(String texte) {
-  return Card(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        ListTile(
-          leading: const Icon(Icons.map),
-          title: Text(texte, style: const TextStyle(color: Color.fromARGB(255, 105, 105, 105))),
+        // Markers pour le départ et l'arrivée
+        MarkerLayer(markers: [
+          if (depart != null)
+            Marker(
+              width: 80.0,
+              height: 80.0,
+              point: depart,
+              child: Icon(Icons.my_location, color: Colors.blue, size: 40.0),
+            ),
+          if (arrivee != null)
+            Marker(
+              width: 80.0,
+              height: 80.0,
+              point: arrivee,
+              child: Icon(Icons.location_pin, color: Colors.red, size: 40.0),
+            ),
+          ]
         ),
       ],
     ),
   );
 }
 
-CircleMarker zoneDanger(LatLng point, ) {
-  return CircleMarker(
-    point: point,
-    radius: 200,
-    useRadiusInMeter: true,
-    color: const Color.fromARGB(255, 244, 114, 54).withOpacity(0.5),
-  );
+class TextCard extends StatelessWidget {
+  final String texte;
+  final Icon icon;
+  final TextEditingController controller;
+  final Function(String) onValider;
+
+  const TextCard(this.texte, this.icon, this.controller, {required this.onValider, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: ListTile(
+          leading: icon,
+          title: TextField(
+            controller: controller,
+            onSubmitted: onValider,
+            decoration: InputDecoration(
+              hintText: texte,
+              labelStyle: const TextStyle(color: AppColors.textSecondary),
+              border: InputBorder.none,
+            ),
+          ),
+        ),
+    );
+  }
 }
 
 Widget _barreNavigation() {
   return Container(
-    color: const Color.fromARGB(255, 58, 183, 131),
+    color: AppColors.primary,
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
