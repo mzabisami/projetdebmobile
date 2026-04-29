@@ -105,6 +105,13 @@ class _CartePageState extends State<CartePage> {
     });
   }
 
+  void onModeTransportChange(String mode) {
+    setState(() {
+      trajetActuel.modeTransport = mode;
+    });
+    _calculerTrajet();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -116,17 +123,24 @@ class _CartePageState extends State<CartePage> {
         child: Column(
           children: [
             TextCard("D'où partez-vous ?", 
-                    const Icon(Icons.my_location), 
-                    _departController,
+                    const Icon(Icons.my_location), _departController,
                     onValider: (valeur) => _rechercherVille(valeur, true)
             ),
             TextCard('Où voulez-vous aller ?', 
-                    const Icon(Icons.location_pin), 
-                    _arriveeController, 
+                    const Icon(Icons.location_pin), _arriveeController, 
                     onValider: (valeur) => _rechercherVille(valeur, false)
             ),
 
-            carte(trajetActuel.depart, trajetActuel.arrivee, trajetActuel.trajet, zonesDanger, _mapController),
+            Expanded(
+              child: Stack(
+                children: [
+                  carte(trajetActuel.depart, trajetActuel.arrivee, trajetActuel.trajet, zonesDanger, _mapController),
+                  barreModeTransport(trajetActuel.modeTransport, onModeTransportChange),
+                  barreZoom(_mapController),
+                ],
+              ),
+            ),
+
             barreNavigation(),
           ],
         ),
