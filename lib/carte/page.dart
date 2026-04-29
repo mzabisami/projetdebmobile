@@ -3,6 +3,7 @@ import 'package:devmobile/carte/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
 import '../theme.dart';
 
 import 'package:http/http.dart' as http;
@@ -27,13 +28,67 @@ class _CartePageState extends State<CartePage> {
     ZoneDanger(LatLng(50.374, 3.465), 300, 3),
   ];
   
-  InfosTrajet trajetActuel = InfosTrajet(depart: LatLng(0, 0), modeTransport: 'foot');
+  Map<String, InfosTrajet> trajetsParMode = {
+    'foot': InfosTrajet(modeTransport: 'foot'),
+    'bike': InfosTrajet(modeTransport: 'bike'),
+    'car': InfosTrajet(modeTransport: 'car'),
+  };
+  String modeTransportActuel = 'foot';
 
   @override
   void dispose() {
     _departController.dispose();
     _arriveeController.dispose();
     super.dispose();
+  }
+
+  Future<void> _rechercherPositionActuelle() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      print('Les services de localisation sont désactivés.');
+      return;
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        print('Permission de localisation refusée.');
+        return;
+      }
+    }
+
+    Position position = await Geolocator.getCurrentPosition();
+    LatLng positionLatLng = LatLng(position.latitude, position.longitude);
+    setState(() {
+      trajetsParMode[modeTransportActuel]!.depart = positionLatLng;
+      _mapController.move(positionLatLng, 15.0);
+      _afficherNomVille(positionLatLng, true);
+      _calculerTrajets();
+    });
+  }
+
+  Future<void> _afficherNomVille(LatLng point, bool estDepart) async {
+    final url = Uri.parse('https://nominatim.openstreetmap.org/reverse?format=json&lat=${point.latitude}&lon=${point.longitude}');
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        String nomVille = data['display_name'] ?? 'Ville inconnue';
+        
+        setState(() {
+          if (estDepart) {
+            _departController.text = nomVille;
+          } else {
+            _arriveeController.text = nomVille;
+          }
+        });
+      }
+    } catch (e) {
+      print('Erreur lors de la recherche du nom de la ville : $e');
+    }
   }
 
   Future<void> _rechercherVille(String ville, bool estDepart) async {
@@ -54,14 +109,14 @@ class _CartePageState extends State<CartePage> {
           
           setState(() {
             if (estDepart) {
-              trajetActuel.depart = LatLng(lat, lon);
+              trajetsParMode[modeTransportActuel]!.depart = LatLng(lat, lon);
             } else {
-              trajetActuel.arrivee = LatLng(lat, lon);
+              trajetsParMode[modeTransportActuel]!.arrivee = LatLng(lat, lon);
             }
             _mapController.move(LatLng(lat, lon), 15.0);
           });
           
-          _calculerTrajet();
+          _calculerTrajets();
         }
       }
     } catch (e) {
@@ -69,47 +124,77 @@ class _CartePageState extends State<CartePage> {
     }
   }
 
-  Future<void> _calculerTrajet() async {
-    if (trajetActuel.depart == null || trajetActuel.arrivee == null) return;
+  Future<void> _calculerTrajets() async {
+    if (trajetsParMode[modeTransportActuel]!.depart == null || trajetsParMode[modeTransportActuel]!.arrivee == null) return;
     
-    final url = Uri.parse('https://routing.openstreetmap.de/routed-${trajetActuel.modeTransport}/route/v1/driving/'
-        '${trajetActuel.depart!.longitude},${trajetActuel.depart!.latitude};${trajetActuel.arrivee!.longitude},${trajetActuel.arrivee!.latitude}?overview=full&geometries=geojson'
-    );
+    List<String> modes = ['foot', 'bike', 'car'];
 
-    try {
-      final response = await http.get(url);
+    for (String mode in modes) {
+      trajetsParMode[mode]!.depart = trajetsParMode[modeTransportActuel]!.depart;
+      trajetsParMode[mode]!.arrivee = trajetsParMode[modeTransportActuel]!.arrivee;
+      final url = Uri.parse('https://routing.openstreetmap.de/routed-$mode/route/v1/driving/'
+          '${trajetsParMode[mode]!.depart!.longitude},${trajetsParMode[mode]!.depart!.latitude};'
+          '${trajetsParMode[mode]!.arrivee!.longitude},${trajetsParMode[mode]!.arrivee!.latitude}?overview=full&geometries=geojson'
+      );
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['routes'] != null && data['routes'].isNotEmpty) {
-          final coords = data['routes'][0]['geometry']['coordinates'];
+      try {
+        final response = await http.get(url);
 
-          setState(() {
-            trajetActuel.trajet = coords.map<LatLng>((point) => LatLng(point[1], point[0])).toList();
-            trajetActuel.distance = data['routes'][0]['distance'] / 1000; // Convertir en km
-            trajetActuel.duree = (data['routes'][0]['duration'] / 60).round(); // Convertir en minutes
-            _calculerCo2();
-          });
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          if (data['routes'] != null && data['routes'].isNotEmpty) {
+            final coords = data['routes'][0]['geometry']['coordinates'];
+
+            setState(() {
+              trajetsParMode[mode]!.trajet = coords.map<LatLng>((point) => LatLng(point[1], point[0])).toList();
+              trajetsParMode[mode]!.distance = data['routes'][0]['distance'] / 1000; // Convertir en km
+              trajetsParMode[mode]!.duree = (data['routes'][0]['duration'] / 60).round(); // Convertir en minutes
+              _calculerCo2(mode);
+            });
+
+            print('---');
+            print(trajetsParMode[mode]!.modeTransport);
+            print(trajetsParMode[mode]!.distance);
+            print(trajetsParMode[mode]!.duree);
+            print(trajetsParMode[mode]!.co2);
+            print('---');
+
+          }
         }
-      }
-    } catch (e) {
-      print('Erreur lors du calcul du trajet : $e');
+      } catch (e) {
+        print('Erreur lors du calcul du trajet : $e');
+      }    
     }
   }
 
-  void _calculerCo2() {
-    if (trajetActuel.trajet == null) return;
+  void _calculerCo2(String mode) {
+    if (trajetsParMode[mode]!.trajet == null) return;
 
     setState(() {
-      trajetActuel.co2 = trajetActuel.distance * (trajetActuel.modeTransport == 'car' ? 120 : 0); // 120g CO2/km pour la voiture
+      trajetsParMode[mode]!.co2 = trajetsParMode[mode]!.distance * (trajetsParMode[mode]!.modeTransport == 'car' ? 120 : 0); // 120g CO2/km pour la voiture
     });
   }
 
   void onModeTransportChange(String mode) {
     setState(() {
-      trajetActuel.modeTransport = mode;
+      modeTransportActuel = mode;
     });
-    _calculerTrajet();
+    _calculerTrajets();
+  }
+
+  void _echangerVilles() {
+    setState(() {
+      LatLng? posDepart = trajetsParMode[modeTransportActuel]!.depart;
+      LatLng? posArrivee = trajetsParMode[modeTransportActuel]!.arrivee;
+      String txtDepart = _departController.text;
+      String txtArrivee = _arriveeController.text;
+
+      trajetsParMode[modeTransportActuel]!.depart = posArrivee;
+      trajetsParMode[modeTransportActuel]!.arrivee = posDepart;
+      _departController.text = txtArrivee;
+      _arriveeController.text = txtDepart;
+    });
+    _calculerTrajets();
   }
 
   @override
@@ -134,9 +219,19 @@ class _CartePageState extends State<CartePage> {
             Expanded(
               child: Stack(
                 children: [
-                  carte(trajetActuel.depart, trajetActuel.arrivee, trajetActuel.trajet, zonesDanger, _mapController),
-                  barreModeTransport(trajetActuel.modeTransport, onModeTransportChange),
+                  carte(trajetsParMode[modeTransportActuel]!.depart, trajetsParMode[modeTransportActuel]!.arrivee, trajetsParMode[modeTransportActuel]!.trajet, zonesDanger, _mapController),
+                  barreModeTransport(modeTransportActuel, onModeTransportChange),
                   barreZoom(_mapController),
+                  Positioned(
+                    top: 5,
+                    left: 5,
+                    child: btnIcon(Icons.my_location, () => _rechercherPositionActuelle())
+                  ),
+                  Positioned(
+                    top: 5,
+                    right: 5,
+                    child: btnIcon(Icons.swap_horiz, () => _echangerVilles())
+                  ),
                 ],
               ),
             ),
@@ -148,4 +243,3 @@ class _CartePageState extends State<CartePage> {
     );
   }
 }
-

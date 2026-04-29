@@ -132,3 +132,11 @@ Widget _btnTransport(IconData icon, String modeSelected, String modeActuel, Func
     child: Icon(icon, color: modeSelected == modeActuel ? AppColors.primaryLight :  AppColors.primary),
   );
 }
+
+Widget btnIcon(IconData icon, Function() onPressed) {
+  return FloatingActionButton(
+    backgroundColor: AppColors.primaryLight,
+    onPressed: onPressed,
+    child: Icon(icon, color: AppColors.primary),
+  );
+}

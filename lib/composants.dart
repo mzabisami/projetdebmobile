@@ -59,7 +59,6 @@ class TextCard extends StatelessWidget {
   }
 }
 
-
 Widget barreNavigation() {
   return Container(
     color: AppColors.primary,
