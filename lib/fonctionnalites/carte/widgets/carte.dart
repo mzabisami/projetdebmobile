@@ -1,9 +1,7 @@
-import 'package:devmobile/composants.dart';
-import 'package:devmobile/theme.dart';
+import 'package:devmobile/modeles/zone_danger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-
 
 Widget carte(LatLng? depart, LatLng? arrivee, List<LatLng>? trajet, List<ZoneDanger> zonesDanger, MapController mapController) {
   return FlutterMap(
@@ -54,7 +52,7 @@ CircleLayer _layerZonesDanger(List<ZoneDanger> zonesDanger) {
   ]);
 }
 
-Widget _layerTrajet(List<LatLng>? trajet) {
+PolylineLayer _layerTrajet(List<LatLng>? trajet) {
   if (trajet != null && trajet.isNotEmpty) {
     return PolylineLayer(polylines: [
       Polyline(
@@ -64,7 +62,7 @@ Widget _layerTrajet(List<LatLng>? trajet) {
       ),
     ]);
   } else {
-    return Container();
+    return PolylineLayer(polylines: []);
   }
 }
 
@@ -85,58 +83,4 @@ MarkerLayer _layerMarkers(LatLng? depart, LatLng? arrivee) {
         child: Icon(Icons.location_pin, color: Colors.red, size: 40.0),
       ),
   ]);
-}
-
-Widget barreModeTransport(String modeActuel, Function(String) onModeTransportChange) {
-  return Positioned(
-    bottom: 20,
-    left: 5,
-    child: Row(
-      children: [
-        _btnTransport(Icons.directions_car, 'car', modeActuel, onModeTransportChange),
-        SizedBox(width: 5),
-        _btnTransport(Icons.directions_bike, 'bike', modeActuel, onModeTransportChange),
-        SizedBox(width: 5),
-        _btnTransport(Icons.directions_walk, 'foot', modeActuel, onModeTransportChange),
-      ]
-    )
-  );
-}
-
-Widget barreZoom(MapController mapController) {
-  return Positioned(
-    bottom: 20,
-    right: 5,
-    child: Column(
-      children: [
-        FloatingActionButton(
-          backgroundColor: AppColors.primaryLight,
-          onPressed: () => mapController.move(mapController.camera.center, mapController.camera.zoom+1),
-          child: const Icon(Icons.zoom_in, color: AppColors.primary),
-        ),
-        SizedBox(height: 5),
-        FloatingActionButton(
-          backgroundColor: AppColors.primaryLight,
-          onPressed: () => mapController.move(mapController.camera.center, mapController.camera.zoom-1),
-          child: const Icon(Icons.zoom_out, color: AppColors.primary),
-        ),
-      ]
-    )
-  );
-}
-
-Widget _btnTransport(IconData icon, String modeSelected, String modeActuel, Function(String) onModeTransportChange) {
-  return FloatingActionButton(
-    backgroundColor: modeSelected == modeActuel ? AppColors.secondary : AppColors.secondaryLight,
-    onPressed: () => onModeTransportChange(modeSelected),
-    child: Icon(icon, color: modeSelected == modeActuel ? AppColors.primaryLight :  AppColors.primary),
-  );
-}
-
-Widget btnIcon(IconData icon, Function() onPressed) {
-  return FloatingActionButton(
-    backgroundColor: AppColors.primaryLight,
-    onPressed: onPressed,
-    child: Icon(icon, color: AppColors.primary),
-  );
 }

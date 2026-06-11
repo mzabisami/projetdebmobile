@@ -1,4 +1,4 @@
-import 'package:devmobile/carte/page.dart';
+import 'package:devmobile/fonctionnalites/carte/carte_page.dart';
 import 'package:flutter/material.dart';
 
 void main() {
