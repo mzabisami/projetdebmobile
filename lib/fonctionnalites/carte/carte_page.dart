@@ -3,9 +3,9 @@ import 'package:devmobile/fonctionnalites/carte/widgets/barre_mode_transport.dar
 import 'package:devmobile/fonctionnalites/carte/widgets/barre_zoom.dart';
 import 'package:devmobile/fonctionnalites/carte/widgets/carte.dart';
 import 'package:devmobile/fonctionnalites/carte/widgets/typeahead.dart';
+import 'package:devmobile/fonctionnalites/carte/widgets/bandeau_infos_trajet.dart';
 import 'package:devmobile/composants/btn_icon_action.dart';
 import 'package:devmobile/composants/barre_navigation.dart';
-import 'package:devmobile/modeles/infos_trajets.dart';
 import 'package:devmobile/modeles/zone_danger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -29,15 +29,8 @@ class _CartePageState extends State<CartePage> {
   List<ZoneDanger> zonesDanger = [
     ZoneDanger(LatLng(50.381, 3.475), 200, 1),
     ZoneDanger(LatLng(50.361, 3.485), 200, 2),
-    ZoneDanger(LatLng(50.374, 3.465), 300, 3),
+    ZoneDanger(LatLng(50.374, 3.465), 300, 3)
   ];
-  
-  Map<String, InfosTrajet> trajetsParMode = {
-    'foot': InfosTrajet(modeTransport: 'foot'),
-    'bike': InfosTrajet(modeTransport: 'bike'),
-    'car': InfosTrajet(modeTransport: 'car'),
-  };
-  String modeTransportActuel = 'foot';
 
   @override
   void dispose() {
@@ -46,36 +39,21 @@ class _CartePageState extends State<CartePage> {
     super.dispose();
   }
 
-  Future<void> _mettreAJourTrajet() async {
-    if (trajetsParMode[modeTransportActuel]!.depart != null && trajetsParMode[modeTransportActuel]!.arrivee != null) {
-      final newTrajets = await ItineraireServices.calculerTousTrajets(
-        depart: trajetsParMode[modeTransportActuel]!.depart!,
-        arrivee: trajetsParMode[modeTransportActuel]!.arrivee!,
-        trajetsParMode: trajetsParMode,
-      );
-      setState(() {
-        trajetsParMode = newTrajets;
-      });
+  Future<void> _appliquerSelectionLieu(LatLng coordonnes, String lieu, bool estDepart) async {
+    if (estDepart) {
+      _departController.text = lieu;
+      ItineraireServices.depart = coordonnes;
+    } else {
+      _arriveeController.text = lieu;
+      ItineraireServices.arrivee = coordonnes;
     }
-  }
-
-  void _appliquerSelectionLieu(LatLng coordonnes, String lieu, bool estDepart) {
-    setState(() {
-      trajetsParMode.forEach((mode, infos) {
-        if (estDepart) {
-          infos.depart = coordonnes;
-        } else {
-          infos.arrivee = coordonnes;
-        }
-      });
-      if (estDepart) {
-        _departController.text = lieu;
-      } else {
-        _arriveeController.text = lieu;
-      }
-    });
-    _mapController.move(coordonnes, 15.0);
-    _mettreAJourTrajet();
+    if (ItineraireServices.depart != null && ItineraireServices.arrivee != null) {
+      await ItineraireServices.calculerTousTrajets();
+      _recadrerCarte();
+    } else {
+      _mapController.move(coordonnes, 15.0);
+    }
+    setState(() {});
   }
 
   Future<void> _rechercherPositionActuelle() async {
@@ -93,30 +71,87 @@ class _CartePageState extends State<CartePage> {
     LatLng positionLatLng = LatLng(position.latitude, position.longitude);
     
     final nomLieu = await ItineraireServices.getNomLieu(positionLatLng);
-    _appliquerSelectionLieu(positionLatLng, nomLieu, true);
+    await _appliquerSelectionLieu(positionLatLng, nomLieu, true);
+  }
+
+  Future<void> _echangerVilles() async {
+    LatLng? tempPos = ItineraireServices.depart;
+    ItineraireServices.depart = ItineraireServices.arrivee;
+    ItineraireServices.arrivee = tempPos;
+
+    String tempTxt = _departController.text;
+    _departController.text = _arriveeController.text;
+    _arriveeController.text = tempTxt;
+
+    await ItineraireServices.calculerTousTrajets();
+    _recadrerCarte();
+    setState(() {});
   }
 
   void _onModeTransportChange(String mode) {
     setState(() {
-      modeTransportActuel = mode;
+      ItineraireServices.modeActuel = mode;
     });
-    _mettreAJourTrajet();
   }
 
-  void _echangerVilles() {
-    LatLng? posDepart = trajetsParMode[modeTransportActuel]!.depart;
-    LatLng? posArrivee = trajetsParMode[modeTransportActuel]!.arrivee;
-    String txtDepart = _departController.text;
-    String txtArrivee = _arriveeController.text;
-    setState(() {
-      trajetsParMode.forEach((mode, infos) {
-        infos.depart = posArrivee;
-        infos.arrivee = posDepart;
-      });
-      _departController.text = txtArrivee;
-      _arriveeController.text = txtDepart;
-    });
-    _mettreAJourTrajet();
+  void _recadrerCarte() {
+    if (ItineraireServices.depart != null && ItineraireServices.arrivee != null) {
+      _mapController.fitCamera(
+        CameraFit.bounds(
+          bounds: LatLngBounds(ItineraireServices.depart!, ItineraireServices.arrivee!),
+          padding: const EdgeInsets.all(50),
+        ),
+      );
+    }
+  }
+
+  void _recentrerSurLieu(bool estDepart) {
+    final coords = estDepart ? ItineraireServices.depart : ItineraireServices.arrivee;
+    if (coords != null) {
+      _mapController.move(coords, 15.0);
+    }
+  }
+
+  Widget _buildZoneCarte() {
+    return Expanded(
+      child: Stack(
+        children: [
+          carte(ItineraireServices.depart, 
+            ItineraireServices.arrivee, 
+            ItineraireServices.trajetsParMode[ItineraireServices.modeActuel]?.trajet ?? [], 
+            zonesDanger, _mapController
+          ),
+          barreModeTransport(ItineraireServices.modeActuel, _onModeTransportChange),
+          barreZoom(_mapController),
+          Positioned(
+            top: 5,
+            left: 5,
+            child: btnIcon(Icons.my_location, () => _rechercherPositionActuelle())
+          ),
+          Positioned(
+            top: 5,
+            right: 5,
+            child: btnIcon(Icons.swap_horiz, () => _echangerVilles())
+          ),
+          bandeauInfosTrajet(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBarreRecherche() {
+    return Column(
+      children: [
+        Typeahead("D'où partez-vous ?", const Icon(Icons.my_location), _departController,
+          onSelected: (coordonnees, lieu) => _appliquerSelectionLieu(coordonnees, lieu, true),
+          onClick: () => _recentrerSurLieu(true)
+        ),
+        Typeahead('Où voulez-vous aller ?', const Icon(Icons.location_pin), _arriveeController,
+          onSelected: (coordonnees, lieu) => _appliquerSelectionLieu(coordonnees, lieu, false),
+          onClick: () => _recentrerSurLieu(false)
+        ),
+      ],
+    );
   }
 
   @override
@@ -129,35 +164,8 @@ class _CartePageState extends State<CartePage> {
       body: Center(
         child: Column(
           children: [
-            Typeahead("D'où partez-vous ?", 
-                    const Icon(Icons.my_location), _departController,
-                    (coordonnees, lieu) => _appliquerSelectionLieu(coordonnees, lieu, true)
-            ),
-            Typeahead('Où voulez-vous aller ?', 
-                    const Icon(Icons.location_pin), _arriveeController,
-                    (coordonnees, lieu) => _appliquerSelectionLieu(coordonnees, lieu, false)
-            ),
-
-            Expanded(
-              child: Stack(
-                children: [
-                  carte(trajetsParMode[modeTransportActuel]!.depart, trajetsParMode[modeTransportActuel]!.arrivee, trajetsParMode[modeTransportActuel]!.trajet, zonesDanger, _mapController),
-                  barreModeTransport(modeTransportActuel, _onModeTransportChange),
-                  barreZoom(_mapController),
-                  Positioned(
-                    top: 5,
-                    left: 5,
-                    child: btnIcon(Icons.my_location, () => _rechercherPositionActuelle())
-                  ),
-                  Positioned(
-                    top: 5,
-                    right: 5,
-                    child: btnIcon(Icons.swap_horiz, () => _echangerVilles())
-                  ),
-                ],
-              ),
-            ),
-
+            _buildBarreRecherche(),
+            _buildZoneCarte(),
             barreNavigation(),
           ],
         ),

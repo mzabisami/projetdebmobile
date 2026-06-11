@@ -5,6 +5,25 @@ import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 
 class ItineraireServices {
+  static LatLng? depart;
+  static LatLng? arrivee;
+  static String modeActuel = 'foot';
+  static Map<String, InfosTrajet> trajetsParMode = {
+    'foot': InfosTrajet(mode: 'foot'),
+    'bike': InfosTrajet(mode: 'bike'),
+    'car': InfosTrajet(mode: 'car'),
+  };
+
+  static String formaterDuree(int duree) {
+    if (duree < 60) {
+      return '$duree min';
+    } else {
+      int heures = duree ~/ 60;
+      int minutes = duree % 60;
+      return '$heures h $minutes min';
+    }
+  }
+
   static Future<LatLng?> getCoordLieu(String lieu) async {
     if (lieu.trim().isEmpty) {
       return null;
@@ -40,19 +59,17 @@ class ItineraireServices {
     return '';
   }
 
-  static Future<Map<String, InfosTrajet>> calculerTousTrajets({
-    required LatLng depart,
-    required LatLng arrivee,
-    required Map<String, InfosTrajet> trajetsParMode,
-  }) async {
+  static Future<void> calculerTousTrajets() async {
+    if (depart == null || arrivee == null) {
+      return;
+    }
     List<String> modes = ['foot', 'bike', 'car'];
-    Map<String, InfosTrajet> newTrajets = Map.from(trajetsParMode);
 
     for (String mode in modes) {
-      newTrajets[mode]!.depart = depart;
-      newTrajets[mode]!.arrivee = arrivee;
+      trajetsParMode[mode]!.depart = depart;
+      trajetsParMode[mode]!.arrivee = arrivee;
       final url = Uri.parse('https://routing.openstreetmap.de/routed-$mode/route/v1/driving/'
-          '${depart.longitude},${depart.latitude};${arrivee.longitude},${arrivee.latitude}?overview=full&geometries=geojson'
+          '${depart!.longitude},${depart!.latitude};${arrivee!.longitude},${arrivee!.latitude}?overview=full&geometries=geojson'
       );
 
       try {
@@ -62,23 +79,15 @@ class ItineraireServices {
           if (data['routes'] != null && data['routes'].isNotEmpty) {
             final coords = data['routes'][0]['geometry']['coordinates'];
 
-            newTrajets[mode]!.trajet = coords.map<LatLng>((point) => LatLng(point[1], point[0])).toList();
-            newTrajets[mode]!.distance = data['routes'][0]['distance'] / 1000; // Convertir en km
-            newTrajets[mode]!.duree = (data['routes'][0]['duration'] / 60).round(); // Convertir en minutes
-            newTrajets[mode]!.co2 = newTrajets[mode]!.distance * (mode == 'car' ? 120 : 0); // 120g CO2/km pour la voiture
-
-            print('---');
-            print(newTrajets[mode]!.modeTransport);
-            print(newTrajets[mode]!.distance);
-            print(newTrajets[mode]!.duree);
-            print(newTrajets[mode]!.co2);
-            print('---');
+            trajetsParMode[mode]!.trajet = coords.map<LatLng>((point) => LatLng(point[1], point[0])).toList();
+            trajetsParMode[mode]!.distance = data['routes'][0]['distance'] / 1000; // Convertir en km
+            trajetsParMode[mode]!.duree = (data['routes'][0]['duration'] / 60).round(); // Convertir en minutes
+            trajetsParMode[mode]!.co2 = trajetsParMode[mode]!.distance * (mode == 'car' ? 120 : 0); // 120g CO2/km pour la voiture
           }
         }
       } catch (e) {
         print('Erreur lors du calcul du trajet : $e');
       }
     }
-    return newTrajets;
   }
 }

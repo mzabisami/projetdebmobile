@@ -12,17 +12,22 @@ class Typeahead extends StatelessWidget {
   final String texte;
   final Icon icon;
   final TextEditingController textController;
-  final Function(LatLng coordonnees, String lieu) onSelected;
+  final Function(LatLng coordonnees, String lieu)? onSelected;
+  final VoidCallback? onClick;
 
-  const Typeahead(this.texte, this.icon, this.textController, this.onSelected, {super.key});
+  const Typeahead(this.texte, this.icon, this.textController, {super.key, this.onSelected, this.onClick});
 
   @override
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
-        leading: icon,
+        leading: GestureDetector(
+          onTap: onClick,
+          child: icon
+        ),
         title: TypeAheadField<dynamic>(
           controller: textController,
+          emptyBuilder: (context) => const SizedBox.shrink(),
           suggestionsCallback:(search) async {
             final url = Uri.parse('https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(search)}&format=json&limit=5');
             try {
@@ -61,7 +66,7 @@ class Typeahead extends StatelessWidget {
             final lon = double.parse(suggestion['lon']);
             final lieu = suggestion['display_name'] ?? '';
 
-            onSelected(LatLng(lat, lon), lieu);
+            onSelected!(LatLng(lat, lon), lieu);
           }
         )
       ),

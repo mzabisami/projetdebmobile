@@ -11,8 +11,8 @@ Widget carte(LatLng? depart, LatLng? arrivee, List<LatLng>? trajet, List<ZoneDan
         ? LatLng((depart.latitude + arrivee.latitude) / 2, (depart.longitude + arrivee.longitude) / 2)
         : LatLng(50.361, 3.465),
       initialZoom: 13.0,
-      minZoom: 10.0,
-      maxZoom: 50.0,
+      minZoom: 2.0,
+      maxZoom: 17.0,
       interactionOptions: const InteractionOptions(
         flags: InteractiveFlag.all,
       ),
