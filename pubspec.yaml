@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.11.3
+  sdk: ^3.10.8
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -37,6 +37,10 @@ dependencies:
   flutter_map: ^8.2.2
   latlong2: ^0.9.1
   flutter_map_location_marker: ^10.2.0
+  cloud_firestore: ^4.17.0
+  firebase_core: ^2.32.0
+  fl_chart: ^0.68.0
+  http: ^1.2.0
 
 dev_dependencies:
   flutter_test:
@@ -59,6 +63,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/data/security_zones.json
 
   # To add assets to your application, add an assets section, like this:
   # assets:
