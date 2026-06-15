@@ -1,9 +1,21 @@
+import 'package:devmobile/fonctionnalites/carte/itineraire_services.dart';
+import 'package:devmobile/modeles/infos_trajets.dart';
 import 'package:devmobile/points_service.dart';
 import 'package:flutter/material.dart';
 
 const Color vertEcoSafe = Color.fromARGB(255, 58, 183, 131);
 const Color bleuSecurite = Color.fromARGB(255, 47, 115, 255);
 const Color fondEcran = Color.fromARGB(255, 248, 250, 252);
+
+DonneesTrajet trajetDepuisItineraire() {
+  final trajet = ItineraireServices.trajetsParMode[ItineraireServices.modeActuel] ?? InfosTrajet(mode: ItineraireServices.modeActuel);
+  final distance = trajet.distance > 0 ? trajet.distance : (ItineraireServices.trajetsParMode['car']?.distance ?? 0.0);
+  return DonneesTrajet(
+    depart: ItineraireServices.departLabel,
+    arrivee: ItineraireServices.arriveeLabel,
+    distanceKm: distance,
+  );
+}
 
 class DonneesTrajet {
   const DonneesTrajet({
@@ -130,15 +142,15 @@ List<TransportMode> calculerOptionsTransport({
 }
 
 class TransportScreen extends StatelessWidget {
-  const TransportScreen({super.key, this.trajet = trajetExemple});
+  const TransportScreen({super.key, this.trajet});
 
-  // Plus tard, la page Carte appellera TransportScreen(trajet: vraiesDonnees).
-  final DonneesTrajet trajet;
+  final DonneesTrajet? trajet;
 
   @override
   Widget build(BuildContext context) {
+    final trajetActuel = trajet ?? trajetDepuisItineraire();
     final options = calculerOptionsTransport(
-      trajet: trajet,
+      trajet: trajetActuel,
       transports: transportsMock,
     );
     final meilleurChoix = options.first;
@@ -155,7 +167,7 @@ class TransportScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _resumeTrajet(),
+          _resumeTrajet(trajetActuel),
           const SizedBox(height: 16),
           _cartePoints(),
           const SizedBox(height: 18),
@@ -173,7 +185,7 @@ class TransportScreen extends StatelessWidget {
     );
   }
 
-  Widget _resumeTrajet() {
+  Widget _resumeTrajet(DonneesTrajet trajetActuel) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -184,9 +196,9 @@ class TransportScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: _adresse('De', trajet.depart)),
+              Expanded(child: _adresse('De', trajetActuel.depart)),
               const Icon(Icons.arrow_forward, color: vertEcoSafe, size: 18),
-              Expanded(child: _adresse('À', trajet.arrivee)),
+              Expanded(child: _adresse('À', trajetActuel.arrivee)),
             ],
           ),
           const SizedBox(height: 10),
@@ -201,7 +213,7 @@ class TransportScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '${trajet.distanceKm.toStringAsFixed(1)} km récupérés depuis la carte',
+            '${trajetActuel.distanceKm.toStringAsFixed(1)} km récupérés depuis la carte',
             style: const TextStyle(color: Colors.black54, fontSize: 12),
           ),
         ],

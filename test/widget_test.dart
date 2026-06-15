@@ -1,7 +1,10 @@
+import 'package:devmobile/fonctionnalites/carte/itineraire_services.dart';
 import 'package:devmobile/main.dart';
+import 'package:devmobile/modeles/infos_trajets.dart';
 import 'package:devmobile/points_service.dart';
 import 'package:devmobile/transport_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:latlong2/latlong.dart';
 
 void main() {
   test('Dev 2 calcule les points eco et securite', () {
@@ -26,21 +29,25 @@ void main() {
     expect(pointsService.getPointsBalance(), 30);
   });
 
-  testWidgets('affiche les options de transport en francais', (tester) async {
+  testWidgets('affiche la page de carte au démarrage', (tester) async {
     await tester.pumpWidget(const EcoSafe());
 
-    expect(find.text('Modes de transport'), findsOneWidget);
-    expect(find.text('123 Rue de la Paix'), findsOneWidget);
-    expect(find.text('45 Avenue des Champs'), findsOneWidget);
-    expect(find.text('Système de points'), findsOneWidget);
-    expect(find.text('Options disponibles'), findsOneWidget);
+    expect(find.text('EcoSafe'), findsOneWidget);
+    expect(find.text("D'où partez-vous ?"), findsOneWidget);
+    expect(find.text('Où voulez-vous aller ?'), findsOneWidget);
+  });
 
-    final premiereCarte = tester.widget<TransportModeCard>(
-      find.byType(TransportModeCard).first,
-    );
+  test('utilise les coordonnées et la distance de l itineraire pour le transport', () {
+    ItineraireServices.depart = const LatLng(50.361, 3.465);
+    ItineraireServices.arrivee = const LatLng(50.381, 3.475);
+    ItineraireServices.departLabel = 'Valenciennes Nord';
+    ItineraireServices.arriveeLabel = 'Campus';
+    ItineraireServices.trajetsParMode['car'] = InfosTrajet(mode: 'car', distance: 3.4);
 
-    expect(premiereCarte.transport.nom, 'Vélo');
-    expect(premiereCarte.transport.pointsTotal, 40);
-    expect(premiereCarte.estMeilleur, isTrue);
+    final trajet = trajetDepuisItineraire();
+
+    expect(trajet.depart, 'Valenciennes Nord');
+    expect(trajet.arrivee, 'Campus');
+    expect(trajet.distanceKm, 3.4);
   });
 }

@@ -7,6 +7,8 @@ import 'package:latlong2/latlong.dart';
 class ItineraireServices {
   static LatLng? depart;
   static LatLng? arrivee;
+  static String departLabel = 'Départ';
+  static String arriveeLabel = 'Arrivée';
   static String modeActuel = 'foot';
   static Map<String, InfosTrajet> trajetsParMode = {
     'foot': InfosTrajet(mode: 'foot'),
