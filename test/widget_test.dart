@@ -1,30 +1,46 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
+import 'package:devmobile/main.dart';
+import 'package:devmobile/points_service.dart';
+import 'package:devmobile/transport_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:devmobile/main.dart';
-
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  test('Dev 2 calcule les points eco et securite', () {
+    final pointsService = PointsService();
+
+    final resultat = pointsService.calculatePoints(
+      const DonneesCalculPoints(co2Mode: 0, co2Voiture: 2.3, scoreSecurite: 92),
+    );
+
+    expect(resultat.pointsEco, 25);
+    expect(resultat.pointsSecurite, 15);
+    expect(resultat.total, 40);
+  });
+
+  test('Dev 2 gere le solde et les depenses de points', () {
+    final pointsService = PointsService(soldeInitial: 50);
+
+    expect(pointsService.getPointsBalance(), 50);
+    expect(pointsService.spendPoints('recompense_bus', 20), isTrue);
+    expect(pointsService.getPointsBalance(), 30);
+    expect(pointsService.spendPoints('recompense_trop_chere', 40), isFalse);
+    expect(pointsService.getPointsBalance(), 30);
+  });
+
+  testWidgets('affiche les options de transport en francais', (tester) async {
     await tester.pumpWidget(const EcoSafe());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Modes de transport'), findsOneWidget);
+    expect(find.text('123 Rue de la Paix'), findsOneWidget);
+    expect(find.text('45 Avenue des Champs'), findsOneWidget);
+    expect(find.text('Système de points'), findsOneWidget);
+    expect(find.text('Options disponibles'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    final premiereCarte = tester.widget<TransportModeCard>(
+      find.byType(TransportModeCard).first,
+    );
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(premiereCarte.transport.nom, 'Vélo');
+    expect(premiereCarte.transport.pointsTotal, 40);
+    expect(premiereCarte.estMeilleur, isTrue);
   });
 }
