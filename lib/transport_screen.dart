@@ -1,4 +1,4 @@
-import 'package:devmobile/fonctionnalites/carte/itineraire_services.dart';
+import 'package:devmobile/services/itineraire_service.dart';
 import 'package:devmobile/modeles/infos_trajets.dart';
 import 'package:devmobile/points_service.dart';
 import 'package:flutter/material.dart';
@@ -181,7 +181,6 @@ class TransportScreen extends StatelessWidget {
           _bannierePoints(meilleurChoix),
         ],
       ),
-      bottomNavigationBar: _navigationBas(),
     );
   }
 
@@ -375,34 +374,6 @@ class TransportScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _navigationBas() {
-    return NavigationBar(
-      selectedIndex: 1,
-      height: 66,
-      backgroundColor: Colors.white,
-      indicatorColor: const Color.fromARGB(255, 220, 250, 235),
-      destinations: const [
-        NavigationDestination(icon: Icon(Icons.map_outlined), label: 'Carte'),
-        NavigationDestination(
-          icon: Icon(Icons.directions_bus),
-          label: 'Transport',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.shield_outlined),
-          label: 'Sécurité',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.person_outline),
-          label: 'Profil',
-        ),
-        NavigationDestination(
-          icon: Icon(Icons.shopping_bag_outlined),
-          label: 'Boutique',
-        ),
-      ],
     );
   }
 }

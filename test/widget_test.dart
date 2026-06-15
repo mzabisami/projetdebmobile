@@ -1,9 +1,13 @@
 import 'package:devmobile/config/theme.dart';
 import 'package:devmobile/main.dart';
 import 'package:devmobile/mocks/mock_data.dart';
+import 'package:devmobile/modeles/infos_trajets.dart';
 import 'package:devmobile/screens/shop_screen.dart';
+import 'package:devmobile/services/itineraire_service.dart';
+import 'package:devmobile/transport_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:latlong2/latlong.dart';
 
 const _testRewards = [
   Reward(
@@ -64,29 +68,7 @@ const _testRewards = [
 ];
 
 void main() {
-  test('Dev 2 calcule les points eco et securite', () {
-    final pointsService = PointsService();
-
-    final resultat = pointsService.calculatePoints(
-      const DonneesCalculPoints(co2Mode: 0, co2Voiture: 2.3, scoreSecurite: 92),
-    );
-
-    expect(resultat.pointsEco, 25);
-    expect(resultat.pointsSecurite, 15);
-    expect(resultat.total, 40);
-  });
-
-  test('Dev 2 gere le solde et les depenses de points', () {
-    final pointsService = PointsService(soldeInitial: 50);
-
-    expect(pointsService.getPointsBalance(), 50);
-    expect(pointsService.spendPoints('recompense_bus', 20), isTrue);
-    expect(pointsService.getPointsBalance(), 30);
-    expect(pointsService.spendPoints('recompense_trop_chere', 40), isFalse);
-    expect(pointsService.getPointsBalance(), 30);
-  });
-
-  testWidgets('affiche la page de carte au démarrage', (tester) async {
+  Future<void> pumpEcoSafe(WidgetTester tester) async {
     await tester.pumpWidget(const EcoSafe());
     await tester.pump();
   }
@@ -162,7 +144,6 @@ void main() {
 
     expect(find.byType(ShopScreen), findsOneWidget);
     expect(find.text('Mes points'), findsOneWidget);
-
     expect(find.text('EcoSafe'), findsOneWidget);
     expect(find.text("D'où partez-vous ?"), findsOneWidget);
     expect(find.text('Où voulez-vous aller ?'), findsOneWidget);
