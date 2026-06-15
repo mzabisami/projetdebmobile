@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
+import 'screens/profile_screen.dart';
+import 'screens/safety_screen.dart';
+import 'screens/stats_screen.dart';
+
+// TODO: remplacer par l'UID Firebase Auth une fois l'authentification en place
+const String _currentUserId = 'utilisateur_test';
 
 
 class CartePage extends StatefulWidget {
@@ -27,7 +32,7 @@ class _CartePageState extends State<CartePage> {
             _trajetCard('Où voulez-vous aller ?'),
 
             _carte([50.361, 3.465], [60, 10]),
-            _barreNavigation(),
+            _barreNavigation(context),
           ],
         ),
       ),
@@ -89,7 +94,7 @@ Widget _trajetCard(String texte) {
   );
 }
 
-Widget _barreNavigation() {
+Widget _barreNavigation(BuildContext context) {
   return Container(
     color: const Color.fromARGB(255, 58, 183, 131),
     child: Row(
@@ -100,12 +105,31 @@ Widget _barreNavigation() {
           onPressed: () {},
         ),
         IconButton(
+          icon: const Icon(Icons.bar_chart, color: Colors.white),
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => StatsScreen(userId: _currentUserId),
+            ),
+          ),
+        ),
+        IconButton(
           icon: const Icon(Icons.directions_car, color: Colors.white),
-          onPressed: () {},
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => SafetyScreen(userId: _currentUserId),
+            ),
+          ),
         ),
         IconButton(
           icon: const Icon(Icons.settings, color: Colors.white),
-          onPressed: () {},
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ProfileScreen(userId: _currentUserId),
+            ),
+          ),
         ),
       ],
     ),
