@@ -1,4 +1,4 @@
-import 'package:devmobile/theme.dart';
+import 'package:devmobile/config/theme.dart';
 import 'package:flutter/material.dart';
 
 

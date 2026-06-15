@@ -1,6 +1,6 @@
-import 'package:devmobile/fonctionnalites/carte/config/theme.dart';
+import 'package:devmobile/config/theme.dart';
 import 'package:devmobile/navigation/tab_nav.dart';
-import 'package:firebase_core/firebase_core_page.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 void main() async {

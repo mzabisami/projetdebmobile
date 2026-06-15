@@ -1,4 +1,4 @@
-import 'package:devmobile/carte.dart';
+import 'package:devmobile/screens/carte_screen.dart';
 import 'package:devmobile/config/theme.dart';
 import 'package:devmobile/screens/profile_screen.dart';
 import 'package:devmobile/screens/safety_screen.dart';
