@@ -70,9 +70,11 @@ class _CartePageState extends State<CartePage> {
     if (estDepart) {
       _departController.text = lieu;
       ItineraireServices.depart = coordonnes;
+      ItineraireServices.departLabel = lieu.isNotEmpty ? lieu : 'Départ';
     } else {
       _arriveeController.text = lieu;
       ItineraireServices.arrivee = coordonnes;
+      ItineraireServices.arriveeLabel = lieu.isNotEmpty ? lieu : 'Arrivée';
     }
     if (ItineraireServices.depart != null && ItineraireServices.arrivee != null) {
       await ItineraireServices.calculerTousTrajets();
@@ -107,8 +109,11 @@ class _CartePageState extends State<CartePage> {
     ItineraireServices.arrivee = tempPos;
 
     String tempTxt = _departController.text;
+    final tempLabel = ItineraireServices.departLabel;
     _departController.text = _arriveeController.text;
     _arriveeController.text = tempTxt;
+    ItineraireServices.departLabel = ItineraireServices.arriveeLabel;
+    ItineraireServices.arriveeLabel = tempLabel;
 
     await ItineraireServices.calculerTousTrajets();
     _recadrerCarte();
