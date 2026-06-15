@@ -4,7 +4,7 @@ import 'package:devmobile/mocks/mock_data.dart';
 import 'package:devmobile/modeles/infos_trajets.dart';
 import 'package:devmobile/screens/shop_screen.dart';
 import 'package:devmobile/services/itineraire_service.dart';
-import 'package:devmobile/transport_screen.dart';
+import 'package:devmobile/screens/transport_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';

@@ -1,6 +1,6 @@
 import 'package:devmobile/services/itineraire_service.dart';
 import 'package:devmobile/modeles/infos_trajets.dart';
-import 'package:devmobile/points_service.dart';
+import 'package:devmobile/services/points_service.dart';
 import 'package:flutter/material.dart';
 
 const Color vertEcoSafe = Color.fromARGB(255, 58, 183, 131);
