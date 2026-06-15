@@ -3,9 +3,9 @@ import '../modeles/historique_trajets.dart';
 import 'user_profile_service.dart';
 
 class RouteHistoryService {
-
-  final CollectionReference _collection =
-      FirebaseFirestore.instance.collection('routes');
+  final CollectionReference _collection = FirebaseFirestore.instance.collection(
+    'routes',
+  );
 
   final UserProfileService _profileService = UserProfileService();
 
@@ -47,8 +47,9 @@ class RouteHistoryService {
 
   // Trajets des 7 derniers jours
   Future<List<Trajets>> getWeeklyRoutes(String userId) async {
-    final DateTime sevenDaysAgo =
-        DateTime.now().subtract(const Duration(days: 7));
+    final DateTime sevenDaysAgo = DateTime.now().subtract(
+      const Duration(days: 7),
+    );
     try {
       final QuerySnapshot snapshot = await _collection
           .where('userId', isEqualTo: userId)
@@ -66,8 +67,9 @@ class RouteHistoryService {
 
   // Trajets des 30 derniers jours
   Future<List<Trajets>> getMonthlyRoutes(String userId) async {
-    final DateTime thirtyDaysAgo =
-        DateTime.now().subtract(const Duration(days: 30));
+    final DateTime thirtyDaysAgo = DateTime.now().subtract(
+      const Duration(days: 30),
+    );
     try {
       final QuerySnapshot snapshot = await _collection
           .where('userId', isEqualTo: userId)
@@ -86,30 +88,36 @@ class RouteHistoryService {
   // Statistiques agrégées (une seule requête Future)
   Future<Map<String, dynamic>> getUserStats(String userId) async {
     try {
-      final List<Trajets> allRoutes   = await getRoutesForUser(userId);
-      final List<Trajets> weekRoutes  = await getWeeklyRoutes(userId);
+      final List<Trajets> allRoutes = await getRoutesForUser(userId);
+      final List<Trajets> weekRoutes = await getWeeklyRoutes(userId);
       final List<Trajets> monthRoutes = await getMonthlyRoutes(userId);
 
-      final int    totalPoints  = allRoutes.fold(0, (int s, Trajets r) => s + r.points);
-      final double totalCo2     = allRoutes.fold(0.0, (double s, Trajets r) => s + r.co2);
-      final int    ecoRoutes    = allRoutes.where((Trajets r) => r.isEco).length;
-      final double avgSecurity  = allRoutes.isEmpty
+      final int totalPoints = allRoutes.fold(
+        0,
+        (int s, Trajets r) => s + r.points,
+      );
+      final double totalCo2 = allRoutes.fold(
+        0.0,
+        (double s, Trajets r) => s + r.co2,
+      );
+      final int ecoRoutes = allRoutes.where((Trajets r) => r.isEco).length;
+      final double avgSecurity = allRoutes.isEmpty
           ? 0
           : allRoutes.fold(0.0, (double s, Trajets r) => s + r.securityScore) /
-            allRoutes.length;
+                allRoutes.length;
 
       return {
-        'totalRoutes':  allRoutes.length,
-        'totalPoints':  totalPoints,
-        'totalCo2':     totalCo2,
-        'ecoRoutes':    ecoRoutes,
-        'avgSecurity':  avgSecurity,
-        'weekRoutes':   weekRoutes.length,
-        'weekPoints':   weekRoutes.fold(0, (int s, Trajets r) => s + r.points),
-        'weekCo2':      weekRoutes.fold(0.0, (double s, Trajets r) => s + r.co2),
-        'monthRoutes':  monthRoutes.length,
-        'monthPoints':  monthRoutes.fold(0, (int s, Trajets r) => s + r.points),
-        'monthCo2':     monthRoutes.fold(0.0, (double s, Trajets r) => s + r.co2),
+        'totalRoutes': allRoutes.length,
+        'totalPoints': totalPoints,
+        'totalCo2': totalCo2,
+        'ecoRoutes': ecoRoutes,
+        'avgSecurity': avgSecurity,
+        'weekRoutes': weekRoutes.length,
+        'weekPoints': weekRoutes.fold(0, (int s, Trajets r) => s + r.points),
+        'weekCo2': weekRoutes.fold(0.0, (double s, Trajets r) => s + r.co2),
+        'monthRoutes': monthRoutes.length,
+        'monthPoints': monthRoutes.fold(0, (int s, Trajets r) => s + r.points),
+        'monthCo2': monthRoutes.fold(0.0, (double s, Trajets r) => s + r.co2),
       };
     } catch (e) {
       return {};
@@ -118,43 +126,56 @@ class RouteHistoryService {
 
   // Stream temps réel des statistiques — se met à jour à chaque trajet sauvegardé
   Stream<Map<String, dynamic>> watchUserStats(String userId) {
-    return _collection
-        .where('userId', isEqualTo: userId)
-        .snapshots()
-        .map((QuerySnapshot snapshot) {
-      final List<Trajets> allRoutes = snapshot.docs.map(
-        (QueryDocumentSnapshot doc) =>
-            Trajets.fromMap(doc.data() as Map<String, dynamic>),
-      ).toList();
+    return _collection.where('userId', isEqualTo: userId).snapshots().map((
+      QuerySnapshot snapshot,
+    ) {
+      final List<Trajets> allRoutes = snapshot.docs
+          .map(
+            (QueryDocumentSnapshot doc) =>
+                Trajets.fromMap(doc.data() as Map<String, dynamic>),
+          )
+          .toList();
 
-      final DateTime sevenDaysAgo  = DateTime.now().subtract(const Duration(days: 7));
-      final DateTime thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+      final DateTime sevenDaysAgo = DateTime.now().subtract(
+        const Duration(days: 7),
+      );
+      final DateTime thirtyDaysAgo = DateTime.now().subtract(
+        const Duration(days: 30),
+      );
 
-      final List<Trajets> weekRoutes =
-          allRoutes.where((Trajets r) => r.date.isAfter(sevenDaysAgo)).toList();
-      final List<Trajets> monthRoutes =
-          allRoutes.where((Trajets r) => r.date.isAfter(thirtyDaysAgo)).toList();
+      final List<Trajets> weekRoutes = allRoutes
+          .where((Trajets r) => r.date.isAfter(sevenDaysAgo))
+          .toList();
+      final List<Trajets> monthRoutes = allRoutes
+          .where((Trajets r) => r.date.isAfter(thirtyDaysAgo))
+          .toList();
 
-      final int    totalPoints = allRoutes.fold(0, (int s, Trajets r) => s + r.points);
-      final double totalCo2    = allRoutes.fold(0.0, (double s, Trajets r) => s + r.co2);
-      final int    ecoRoutes   = allRoutes.where((Trajets r) => r.isEco).length;
+      final int totalPoints = allRoutes.fold(
+        0,
+        (int s, Trajets r) => s + r.points,
+      );
+      final double totalCo2 = allRoutes.fold(
+        0.0,
+        (double s, Trajets r) => s + r.co2,
+      );
+      final int ecoRoutes = allRoutes.where((Trajets r) => r.isEco).length;
       final double avgSecurity = allRoutes.isEmpty
           ? 0.0
           : allRoutes.fold(0.0, (double s, Trajets r) => s + r.securityScore) /
-            allRoutes.length;
+                allRoutes.length;
 
       return {
-        'totalRoutes':  allRoutes.length,
-        'totalPoints':  totalPoints,
-        'totalCo2':     totalCo2,
-        'ecoRoutes':    ecoRoutes,
-        'avgSecurity':  avgSecurity,
-        'weekRoutes':   weekRoutes.length,
-        'weekPoints':   weekRoutes.fold(0, (int s, Trajets r) => s + r.points),
-        'weekCo2':      weekRoutes.fold(0.0, (double s, Trajets r) => s + r.co2),
-        'monthRoutes':  monthRoutes.length,
-        'monthPoints':  monthRoutes.fold(0, (int s, Trajets r) => s + r.points),
-        'monthCo2':     monthRoutes.fold(0.0, (double s, Trajets r) => s + r.co2),
+        'totalRoutes': allRoutes.length,
+        'totalPoints': totalPoints,
+        'totalCo2': totalCo2,
+        'ecoRoutes': ecoRoutes,
+        'avgSecurity': avgSecurity,
+        'weekRoutes': weekRoutes.length,
+        'weekPoints': weekRoutes.fold(0, (int s, Trajets r) => s + r.points),
+        'weekCo2': weekRoutes.fold(0.0, (double s, Trajets r) => s + r.co2),
+        'monthRoutes': monthRoutes.length,
+        'monthPoints': monthRoutes.fold(0, (int s, Trajets r) => s + r.points),
+        'monthCo2': monthRoutes.fold(0.0, (double s, Trajets r) => s + r.co2),
       };
     });
   }

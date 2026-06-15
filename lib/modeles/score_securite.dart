@@ -1,10 +1,10 @@
 class SecurityScore {
-  final String zoneId;        // Identifiant de la zone (ex: "zone_001")
-  final double lighting;      // Éclairage        → valeur entre 0 et 1
-  final double traffic;       // Trafic           → valeur entre 0 et 1
-  final double crowding;      // Fréquentation    → valeur entre 0 et 1
-  final double cyclingPath;   // Piste cyclable   → valeur entre 0 et 1
-  final double latitude;      // Position GPS
+  final String zoneId; // Identifiant de la zone (ex: "zone_001")
+  final double lighting; // Éclairage        → valeur entre 0 et 1
+  final double traffic; // Trafic           → valeur entre 0 et 1
+  final double crowding; // Fréquentation    → valeur entre 0 et 1
+  final double cyclingPath; // Piste cyclable   → valeur entre 0 et 1
+  final double latitude; // Position GPS
   final double longitude;
 
   SecurityScore({
@@ -20,13 +20,13 @@ class SecurityScore {
   // Depuis un Map JSON (pour lire le fichier JSON)
   factory SecurityScore.fromMap(Map<String, dynamic> map) {
     return SecurityScore(
-      zoneId:      map['zoneId']      ?? '',
-      lighting:    (map['lighting']   ?? 0).toDouble(),
-      traffic:     (map['traffic']    ?? 0).toDouble(),
-      crowding:    (map['crowding']   ?? 0).toDouble(),
+      zoneId: map['zoneId'] ?? '',
+      lighting: (map['lighting'] ?? 0).toDouble(),
+      traffic: (map['traffic'] ?? 0).toDouble(),
+      crowding: (map['crowding'] ?? 0).toDouble(),
       cyclingPath: (map['cyclingPath'] ?? 0).toDouble(),
-      latitude:    (map['latitude']   ?? 0).toDouble(),
-      longitude:   (map['longitude']  ?? 0).toDouble(),
+      latitude: (map['latitude'] ?? 0).toDouble(),
+      longitude: (map['longitude'] ?? 0).toDouble(),
     );
   }
 

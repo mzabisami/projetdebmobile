@@ -1,17 +1,64 @@
-# devmobile
+# EcoSafe - devmobile
 
-A new Flutter project.
+Application Flutter de mobilité éco-responsable avec carte, transports, sécurité, profil et boutique de récompenses.
 
-## Getting Started
+## Lancer le projet
 
-This project is a starting point for a Flutter application.
+```powershell
+C:\flutter_sdk\bin\flutter.bat pub get
+C:\flutter_sdk\bin\flutter.bat run -d chrome
+```
 
-A few resources to get you started if this is your first Flutter project:
+## Structure principale
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```text
+lib/
+|-- main.dart
+|-- carte.dart
+|-- config/
+|   `-- theme.dart
+|-- navigation/
+|   `-- tab_nav.dart
+|-- screens/
+|   |-- safety_screen.dart
+|   |-- profile_screen.dart
+|   |-- stats_screen.dart
+|   `-- shop_screen.dart
+|-- data/
+|   `-- rewards.json
+|-- mocks/
+|   `-- mock_data.dart
+|-- modeles/
+`-- services/
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Partie Dev 4
+
+- Boutique complète en mode mock.
+- Solde initial local : `320 pts`.
+- Catalogue des récompenses dans `lib/data/rewards.json`.
+- Échange local : vérifie le solde, déduit les points et confirme avec une notification.
+- Navigation commune avec les onglets Carte, Transport, Sécurité, Profil et Boutique.
+- L'onglet Boutique démarre par défaut pour faciliter la démo Dev 4.
+
+## Intégration
+
+- Firebase est initialisé dans `main.dart` depuis la version distante pullée.
+- Les écrans Sécurité et Profil récupérés du pull sont branchés dans la navigation.
+- L'écran Transport reste un placeholder jusqu'au merge du travail Dev 2.
+
+## Future structure Firebase boutique
+
+La boutique reste mockée dans cette version. La structure prévue pour la suite :
+
+- `users` : profil utilisateur anonyme et solde de points.
+- `trips` : historique des trajets.
+- `points` : transactions de gain et dépense.
+- `rewards` : catalogue des récompenses et disponibilités.
+
+## Validation
+
+```powershell
+C:\flutter_sdk\bin\flutter.bat analyze
+C:\flutter_sdk\bin\flutter.bat test
+```

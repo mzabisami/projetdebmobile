@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class WeatherService {
-
   // Retourne une pénalité négative basée sur la météo et l'heure du jour
   Future<int> getWeatherPenalty(double lat, double lon) async {
     try {
@@ -22,9 +21,9 @@ class WeatherService {
       final Map<String, dynamic> current =
           data['current_weather'] as Map<String, dynamic>;
 
-      final int    weatherCode = (current['weathercode'] as num).toInt();
-      final String timeStr     = current['time'] as String;
-      final int    hour        = DateTime.parse(timeStr).toLocal().hour;
+      final int weatherCode = (current['weathercode'] as num).toInt();
+      final String timeStr = current['time'] as String;
+      final int hour = DateTime.parse(timeStr).toLocal().hour;
 
       int penalty = 0;
 
@@ -32,7 +31,7 @@ class WeatherService {
       if (weatherCode >= 95) {
         penalty -= 20; // Orage
       } else if (weatherCode >= 71 && weatherCode <= 77) {
-        penalty -= 8;  // Neige
+        penalty -= 8; // Neige
       } else if (weatherCode >= 51 && weatherCode <= 67) {
         penalty -= 10; // Pluie
       }

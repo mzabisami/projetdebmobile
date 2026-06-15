@@ -7,7 +7,8 @@ class OverpassService {
   // Retourne les facteurs urbains autour d'un point GPS (rayon 300m)
   Future<Map<String, double>> getUrbanFactors(double lat, double lon) async {
     try {
-      final String query = '''
+      final String query =
+          '''
 [out:json];
 (
   way["highway"="cycleway"](around:300,$lat,$lon);
@@ -65,6 +66,9 @@ out tags;
     }
   }
 
-  Map<String, double> _fallback() =>
-      {'pisteCyclable': 0.5, 'eclairage': 0.5, 'frequentation': 0.5};
+  Map<String, double> _fallback() => {
+    'pisteCyclable': 0.5,
+    'eclairage': 0.5,
+    'frequentation': 0.5,
+  };
 }

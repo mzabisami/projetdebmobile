@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignalementService {
-  final CollectionReference _collection =
-      FirebaseFirestore.instance.collection('signalements');
+  final CollectionReference _collection = FirebaseFirestore.instance.collection(
+    'signalements',
+  );
 
   // Score de danger basé sur les signalements communautaires (~500m autour du point)
   Future<double> getDangerScore(double lat, double lon) async {
@@ -11,7 +12,7 @@ class SignalementService {
       // puis lon côté client
       final QuerySnapshot snapshot = await _collection
           .where('lat', isGreaterThan: lat - 0.005)
-          .where('lat', isLessThan:    lat + 0.005)
+          .where('lat', isLessThan: lat + 0.005)
           .get();
 
       final int count = snapshot.docs.where((QueryDocumentSnapshot doc) {

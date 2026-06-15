@@ -66,6 +66,7 @@ flutter:
 
   assets:
     - assets/data/security_zones.json
+    - lib/data/rewards.json
 
   # To add assets to your application, add an assets section, like this:
   # assets:

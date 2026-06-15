@@ -6,15 +6,15 @@ import 'crimeometer_service.dart';
 import 'weather_service.dart';
 
 class SecurityService {
-
   List<SecurityScore> _zones = [];
   final CrimeoMeterService _crimeometer = CrimeoMeterService();
 
   // Charge les zones depuis Firestore
   Future<void> loadZones() async {
     try {
-      final QuerySnapshot snapshot =
-          await FirebaseFirestore.instance.collection('security_zones').get();
+      final QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('security_zones')
+          .get();
 
       _zones = snapshot.docs.map((QueryDocumentSnapshot doc) {
         return SecurityScore.fromMap(doc.data() as Map<String, dynamic>);
@@ -33,8 +33,10 @@ class SecurityService {
 
     for (final SecurityScore zone in _zones) {
       final double dist = _calculateDistance(
-        userLat, userLon,
-        zone.latitude, zone.longitude,
+        userLat,
+        userLon,
+        zone.latitude,
+        zone.longitude,
       );
       if (dist < minDistance) {
         minDistance = dist;
@@ -52,16 +54,16 @@ class SecurityService {
     required double crowding,
     required double cyclingPath,
   }) {
-    const double wLighting    = 0.30;
-    const double wTraffic     = 0.25;
-    const double wCrowding    = 0.20;
+    const double wLighting = 0.30;
+    const double wTraffic = 0.25;
+    const double wCrowding = 0.20;
     const double wCyclingPath = 0.25;
 
     final double score =
-        (lighting      * wLighting)    +
-        ((1 - traffic) * wTraffic)     +
-        (crowding      * wCrowding)    +
-        (cyclingPath   * wCyclingPath);
+        (lighting * wLighting) +
+        ((1 - traffic) * wTraffic) +
+        (crowding * wCrowding) +
+        (cyclingPath * wCyclingPath);
 
     return (score * 100).clamp(0, 100);
   }
@@ -75,14 +77,14 @@ class SecurityService {
         WeatherService().getWeatherPenalty(lat, lon),
       ]);
 
-      final Map<String, double> urban   = results[0] as Map<String, double>;
-      final double              trafic  = results[1] as double;
-      final int                 weather = results[2] as int;
+      final Map<String, double> urban = results[0] as Map<String, double>;
+      final double trafic = results[1] as double;
+      final int weather = results[2] as int;
 
       final double base = calculateSecurityScore(
-        lighting:    urban['eclairage']!,
-        traffic:     trafic,
-        crowding:    urban['frequentation']!,
+        lighting: urban['eclairage']!,
+        traffic: trafic,
+        crowding: urban['frequentation']!,
         cyclingPath: urban['pisteCyclable']!,
       );
 
@@ -97,15 +99,18 @@ class SecurityService {
       getScoreForPosition(lat, lon);
 
   double _calculateDistance(
-      double lat1, double lon1, double lat2, double lon2) {
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
     const double R = 6371;
     final double dLat = _toRad(lat2 - lat1);
     final double dLon = _toRad(lon2 - lon1);
 
     final double a =
         sin(dLat / 2) * sin(dLat / 2) +
-        cos(_toRad(lat1)) * cos(_toRad(lat2)) *
-        sin(dLon / 2) * sin(dLon / 2);
+        cos(_toRad(lat1)) * cos(_toRad(lat2)) * sin(dLon / 2) * sin(dLon / 2);
 
     return R * 2 * atan2(sqrt(a), sqrt(1 - a));
   }

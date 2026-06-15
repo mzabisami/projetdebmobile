@@ -8,7 +8,6 @@ import 'screens/stats_screen.dart';
 // TODO: remplacer par l'UID Firebase Auth une fois l'authentification en place
 const String _currentUserId = 'utilisateur_test';
 
-
 class CartePage extends StatefulWidget {
   const CartePage({super.key});
 
@@ -21,13 +20,19 @@ class _CartePageState extends State<CartePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('EcoSafe - Valenciennes', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'EcoSafe - Valenciennes',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         backgroundColor: const Color.fromARGB(255, 58, 183, 131),
       ),
       body: Center(
         child: Column(
           children: [
-
             _trajetCard("D'où partez-vous ?"),
             _trajetCard('Où voulez-vous aller ?'),
 
@@ -45,12 +50,18 @@ Widget _carte(List depart, List arrivee) {
     child: FlutterMap(
       mapController: MapController(),
       options: MapOptions(
-        initialCenter: LatLng((depart[0]+arrivee[0])/2, (depart[1]+arrivee[1])/2),
+        initialCenter: LatLng(
+          (depart[0] + arrivee[0]) / 2,
+          (depart[1] + arrivee[1]) / 2,
+        ),
         initialZoom: 13.0,
         minZoom: 5.0,
         maxZoom: 20.0,
         interactionOptions: const InteractionOptions(
-          flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag | InteractiveFlag.doubleTapZoom,
+          flags:
+              InteractiveFlag.pinchZoom |
+              InteractiveFlag.drag |
+              InteractiveFlag.doubleTapZoom,
         ),
       ),
       children: [
@@ -58,8 +69,9 @@ Widget _carte(List depart, List arrivee) {
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
           userAgentPackageName: 'com.example.projetdevmobile',
         ),
-        
-        MarkerLayer(markers: [
+
+        MarkerLayer(
+          markers: [
             Marker(
               width: 80.0,
               height: 80.0,
@@ -73,7 +85,7 @@ Widget _carte(List depart, List arrivee) {
               point: LatLng(arrivee[0], arrivee[1]),
               child: Icon(Icons.location_pin, color: Colors.red, size: 40.0),
             ),
-          ]
+          ],
         ),
       ],
     ),
@@ -87,7 +99,10 @@ Widget _trajetCard(String texte) {
       children: <Widget>[
         ListTile(
           leading: const Icon(Icons.map),
-          title: Text(texte, style: const TextStyle(color: Color.fromARGB(255, 105, 105, 105))),
+          title: Text(
+            texte,
+            style: const TextStyle(color: Color.fromARGB(255, 105, 105, 105)),
+          ),
         ),
       ],
     ),
