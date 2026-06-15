@@ -1,0 +1,54 @@
+{
+  "zones": [
+    {
+      "zoneId": "zone_001",
+      "name": "Centre-ville",
+      "lighting": 0.9,
+      "traffic": 0.7,
+      "crowding": 0.8,
+      "cyclingPath": 0.6,
+      "latitude": 48.5734,
+      "longitude": 7.7521
+    },
+    {
+      "zoneId": "zone_002",
+      "name": "Quartier gare",
+      "lighting": 0.7,
+      "traffic": 0.8,
+      "crowding": 0.7,
+      "cyclingPath": 0.5,
+      "latitude": 48.5850,
+      "longitude": 7.7350
+    },
+    {
+      "zoneId": "zone_003",
+      "name": "Zone industrielle",
+      "lighting": 0.3,
+      "traffic": 0.2,
+      "crowding": 0.2,
+      "cyclingPath": 0.1,
+      "latitude": 48.5600,
+      "longitude": 7.7700
+    },
+    {
+      "zoneId": "zone_004",
+      "name": "Parc universitaire",
+      "lighting": 0.6,
+      "traffic": 0.3,
+      "crowding": 0.7,
+      "cyclingPath": 0.9,
+      "latitude": 48.5780,
+      "longitude": 7.7620
+    },
+    {
+      "zoneId": "zone_005",
+      "name": "Périphérie nord",
+      "lighting": 0.2,
+      "traffic": 0.4,
+      "crowding": 0.3,
+      "cyclingPath": 0.2,
+      "latitude": 48.6000,
+      "longitude": 7.7400
+    }
+  ]
+}

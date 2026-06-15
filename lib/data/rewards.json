@@ -1,0 +1,68 @@
+[
+  {
+    "id": "bus_special",
+    "name": "Ticket bus journée",
+    "description": "Un ticket valable une journée sur le réseau partenaire.",
+    "cost": 120,
+    "available": true,
+    "category": "Transport",
+    "icon": "directions_bus",
+    "isSpecial": true,
+    "discountLabel": "-20%"
+  },
+  {
+    "id": "coffee",
+    "name": "Café offert",
+    "description": "Une boisson chaude chez un commerce partenaire.",
+    "cost": 80,
+    "available": true,
+    "category": "Partenaire",
+    "icon": "local_cafe",
+    "isSpecial": false,
+    "discountLabel": ""
+  },
+  {
+    "id": "lunch",
+    "name": "Réduction déjeuner",
+    "description": "Une remise dans une cantine ou boulangerie partenaire.",
+    "cost": 220,
+    "available": true,
+    "category": "Food",
+    "icon": "restaurant",
+    "isSpecial": false,
+    "discountLabel": ""
+  },
+  {
+    "id": "voucher",
+    "name": "Bon d'achat",
+    "description": "Un bon d'achat utilisable dans la boutique mobilité.",
+    "cost": 450,
+    "available": true,
+    "category": "Shopping",
+    "icon": "shopping_bag",
+    "isSpecial": false,
+    "discountLabel": ""
+  },
+  {
+    "id": "bike_kit",
+    "name": "Kit vélo sécurité",
+    "description": "Lumière, brassard réfléchissant et sonnette.",
+    "cost": 600,
+    "available": false,
+    "category": "Sécurité",
+    "icon": "pedal_bike",
+    "isSpecial": false,
+    "discountLabel": ""
+  },
+  {
+    "id": "event_pass",
+    "name": "Pass événement éco",
+    "description": "Une invitation pour un atelier mobilité durable.",
+    "cost": 300,
+    "available": true,
+    "category": "Événement",
+    "icon": "confirmation_number",
+    "isSpecial": false,
+    "discountLabel": ""
+  }
+]
