@@ -1,9 +1,14 @@
 import 'package:devmobile/config/theme.dart';
+import 'package:devmobile/fonctionnalites/carte/itineraire_services.dart';
 import 'package:devmobile/main.dart';
 import 'package:devmobile/mocks/mock_data.dart';
+import 'package:devmobile/modeles/infos_trajets.dart';
+import 'package:devmobile/points_service.dart';
 import 'package:devmobile/screens/shop_screen.dart';
+import 'package:devmobile/transport_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:latlong2/latlong.dart';
 
 const _testRewards = [
   Reward(
@@ -80,6 +85,28 @@ void main() {
     await tester.pump();
   }
 
+  test('Dev 2 calcule les points eco et securite', () {
+    final pointsService = PointsService();
+
+    final resultat = pointsService.calculatePoints(
+      const DonneesCalculPoints(co2Mode: 0, co2Voiture: 2.3, scoreSecurite: 92),
+    );
+
+    expect(resultat.pointsEco, 25);
+    expect(resultat.pointsSecurite, 15);
+    expect(resultat.total, 40);
+  });
+
+  test('Dev 2 gere le solde et les depenses de points', () {
+    final pointsService = PointsService(soldeInitial: 50);
+
+    expect(pointsService.getPointsBalance(), 50);
+    expect(pointsService.spendPoints('recompense_bus', 20), isTrue);
+    expect(pointsService.getPointsBalance(), 30);
+    expect(pointsService.spendPoints('recompense_trop_chere', 40), isFalse);
+    expect(pointsService.getPointsBalance(), 30);
+  });
+
   testWidgets('EcoSafe affiche la navigation et la boutique', (tester) async {
     await pumpEcoSafe(tester);
 
@@ -141,4 +168,25 @@ void main() {
     expect(find.byType(ShopScreen), findsOneWidget);
     expect(find.text('Mes points'), findsOneWidget);
   });
+
+  test(
+    'utilise les coordonnees et la distance de l itineraire pour le transport',
+    () {
+      ItineraireServices.depart = const LatLng(50.361, 3.465);
+      ItineraireServices.arrivee = const LatLng(50.381, 3.475);
+      ItineraireServices.departLabel = 'Valenciennes Nord';
+      ItineraireServices.arriveeLabel = 'Campus';
+      ItineraireServices.modeActuel = 'car';
+      ItineraireServices.trajetsParMode['car'] = InfosTrajet(
+        mode: 'car',
+        distance: 3.4,
+      );
+
+      final trajet = trajetDepuisItineraire();
+
+      expect(trajet.depart, 'Valenciennes Nord');
+      expect(trajet.arrivee, 'Campus');
+      expect(trajet.distanceKm, 3.4);
+    },
+  );
 }
