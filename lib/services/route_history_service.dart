@@ -19,7 +19,9 @@ class RouteHistoryService {
   // Sauvegarde un trajet et incrémente les stats du profil utilisateur
   Future<void> saveRoute(Trajets route) async {
     try {
-      final int points = computePoints(route.securityScore, route.isEco);
+      final int points = route.points > 0
+          ? route.points
+          : computePoints(route.securityScore, route.isEco);
       final Map<String, dynamic> data = route.toMap();
       data['points'] = points;
       await _collection.doc(route.id).set(data);

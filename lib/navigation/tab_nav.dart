@@ -66,7 +66,13 @@ class _TabNavState extends State<TabNav> {
       case 0:
         return const CartePage();
       case 1:
-        return const TransportScreen();
+        return TransportScreen(
+          onStartTrip: () {
+            setState(() {
+              _selectedIndex = 0;
+            });
+          },
+        );
       case 2:
         return const SafetyScreen(userId: _demoUserId);
       case 3:

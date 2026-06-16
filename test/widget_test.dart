@@ -3,6 +3,7 @@ import 'package:devmobile/fonctionnalites/carte/itineraire_services.dart';
 import 'package:devmobile/main.dart';
 import 'package:devmobile/mocks/mock_data.dart';
 import 'package:devmobile/modeles/infos_trajets.dart';
+import 'package:devmobile/navigation/tab_nav.dart';
 import 'package:devmobile/points_service.dart';
 import 'package:devmobile/screens/shop_screen.dart';
 import 'package:devmobile/transport_screen.dart';
@@ -116,6 +117,22 @@ void main() {
     expect(find.text('Sécurité'), findsWidgets);
     expect(find.text('Profil'), findsWidgets);
     expect(find.text('Boutique'), findsWidgets);
+  });
+
+  testWidgets('Transport utilise uniquement la navigation globale', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.lightTheme,
+        home: const TabNav(initialIndex: 1),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byType(TransportScreen), findsOneWidget);
+    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.text('Modes de transport'), findsOneWidget);
   });
 
   testWidgets('Boutique affiche les récompenses mockées', (tester) async {

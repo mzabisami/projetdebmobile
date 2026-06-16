@@ -851,18 +851,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Color? iconColor,
     Color? iconBg,
   ) {
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: iconBg ?? Colors.grey[100],
-          shape: BoxShape.circle,
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: iconBg ?? Colors.grey[100],
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, size: 20, color: iconColor ?? Colors.grey[700]),
         ),
-        child: Icon(icon, size: 20, color: iconColor ?? Colors.grey[700]),
+        title: Text(label),
+        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+        onTap: () {},
       ),
-      title: Text(label),
-      trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-      onTap: () {},
     );
   }
 

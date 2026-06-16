@@ -5,17 +5,25 @@ import 'package:flutter/material.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: const FirebaseOptions(
-      apiKey: 'AIzaSyDjLBOSvOVWTOGFr5KBWGJO537PiKxxPFo',
-      appId: '1:288865912062:android:c03cbb6f13362b5ded91af',
-      messagingSenderId: '288865912062',
-      projectId: 'ecosafe-e08ca',
-      authDomain: 'ecosafe-e08ca.firebaseapp.com',
-      storageBucket: 'ecosafe-e08ca.firebasestorage.app',
-    ),
-  );
+  await _initializeFirebase();
   runApp(const EcoSafe());
+}
+
+Future<void> _initializeFirebase() async {
+  try {
+    await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: 'AIzaSyDjLBOSvOVWTOGFr5KBWGJO537PiKxxPFo',
+        appId: '1:288865912062:android:c03cbb6f13362b5ded91af',
+        messagingSenderId: '288865912062',
+        projectId: 'ecosafe-e08ca',
+        authDomain: 'ecosafe-e08ca.firebaseapp.com',
+        storageBucket: 'ecosafe-e08ca.firebasestorage.app',
+      ),
+    ).timeout(const Duration(seconds: 6));
+  } catch (error) {
+    debugPrint('Firebase indisponible au démarrage : $error');
+  }
 }
 
 class EcoSafe extends StatelessWidget {

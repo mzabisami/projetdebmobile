@@ -1,5 +1,6 @@
 import 'package:devmobile/config/theme.dart';
 import 'package:devmobile/mocks/mock_data.dart';
+import 'package:devmobile/services/session_points_service.dart';
 import 'package:flutter/material.dart';
 
 class ShopScreen extends StatefulWidget {
@@ -18,12 +19,15 @@ class ShopScreen extends StatefulWidget {
 
 class _ShopScreenState extends State<ShopScreen> {
   late Future<List<Reward>> _rewardsFuture;
-  late int _pointsBalance;
 
   @override
   void initState() {
     super.initState();
-    _pointsBalance = widget.initialPoints;
+    final pointsService = SessionPointsService.instance;
+    if (pointsService.points.value == mockInitialPoints &&
+        widget.initialPoints != mockInitialPoints) {
+      pointsService.points.value = widget.initialPoints;
+    }
     _rewardsFuture = widget.initialRewards == null
         ? loadRewards()
         : Future.value(widget.initialRewards);
@@ -55,7 +59,12 @@ class _ShopScreenState extends State<ShopScreen> {
                 padding: const EdgeInsets.fromLTRB(18, 18, 18, 10),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    _PointsHeader(pointsBalance: _pointsBalance),
+                    ValueListenableBuilder<int>(
+                      valueListenable: SessionPointsService.instance.points,
+                      builder: (context, pointsBalance, _) {
+                        return _PointsHeader(pointsBalance: pointsBalance);
+                      },
+                    ),
                     const SizedBox(height: 16),
                     if (specialReward != null) ...[
                       _SectionTitle(
@@ -63,11 +72,16 @@ class _ShopScreenState extends State<ShopScreen> {
                         actionLabel: specialReward.discountLabel,
                       ),
                       const SizedBox(height: 8),
-                      _RewardCard(
-                        reward: specialReward,
-                        pointsBalance: _pointsBalance,
-                        highlighted: true,
-                        onRedeem: _redeem,
+                      ValueListenableBuilder<int>(
+                        valueListenable: SessionPointsService.instance.points,
+                        builder: (context, pointsBalance, _) {
+                          return _RewardCard(
+                            reward: specialReward,
+                            pointsBalance: pointsBalance,
+                            highlighted: true,
+                            onRedeem: _redeem,
+                          );
+                        },
                       ),
                       const SizedBox(height: 18),
                     ],
@@ -79,10 +93,15 @@ class _ShopScreenState extends State<ShopScreen> {
                 padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
                 sliver: SliverList.separated(
                   itemBuilder: (context, index) {
-                    return _RewardCard(
-                      reward: regularRewards[index],
-                      pointsBalance: _pointsBalance,
-                      onRedeem: _redeem,
+                    return ValueListenableBuilder<int>(
+                      valueListenable: SessionPointsService.instance.points,
+                      builder: (context, pointsBalance, _) {
+                        return _RewardCard(
+                          reward: regularRewards[index],
+                          pointsBalance: pointsBalance,
+                          onRedeem: _redeem,
+                        );
+                      },
                     );
                   },
                   separatorBuilder: (context, index) =>
@@ -118,13 +137,13 @@ class _ShopScreenState extends State<ShopScreen> {
   }
 
   void _redeem(Reward reward) {
-    if (!canRedeemReward(reward, _pointsBalance)) {
+    final pointsService = SessionPointsService.instance;
+    final pointsBalance = pointsService.points.value;
+    if (!canRedeemReward(reward, pointsBalance)) {
       return;
     }
 
-    setState(() {
-      _pointsBalance = redeemReward(reward, _pointsBalance);
-    });
+    pointsService.depenserPoints(reward.cost);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
