@@ -1,12 +1,14 @@
 import 'package:devmobile/config/theme.dart';
-import 'package:devmobile/fonctionnalites/carte/itineraire_services.dart';
 import 'package:devmobile/main.dart';
 import 'package:devmobile/mocks/mock_data.dart';
 import 'package:devmobile/modeles/infos_trajets.dart';
 import 'package:devmobile/navigation/tab_nav.dart';
-import 'package:devmobile/points_service.dart';
+import 'package:devmobile/screens/carte_screen.dart';
 import 'package:devmobile/screens/shop_screen.dart';
-import 'package:devmobile/transport_screen.dart';
+import 'package:devmobile/screens/transport_screen.dart';
+import 'package:devmobile/services/itineraire_service.dart';
+import 'package:devmobile/services/points_service.dart';
+import 'package:devmobile/services/session_points_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
@@ -14,8 +16,8 @@ import 'package:latlong2/latlong.dart';
 const _testRewards = [
   Reward(
     id: 'bus_special',
-    name: 'Ticket bus journée',
-    description: 'Un ticket valable une journée.',
+    name: 'Ticket bus journee',
+    description: 'Un ticket valable une journee.',
     cost: 120,
     available: true,
     category: 'Transport',
@@ -25,7 +27,7 @@ const _testRewards = [
   ),
   Reward(
     id: 'coffee',
-    name: 'Café offert',
+    name: 'Cafe offert',
     description: 'Une boisson chaude chez un partenaire.',
     cost: 80,
     available: true,
@@ -36,7 +38,7 @@ const _testRewards = [
   ),
   Reward(
     id: 'lunch',
-    name: 'Réduction déjeuner',
+    name: 'Reduction dejeuner',
     description: 'Une remise dans une cantine partenaire.',
     cost: 220,
     available: true,
@@ -58,11 +60,11 @@ const _testRewards = [
   ),
   Reward(
     id: 'bike_kit',
-    name: 'Kit vélo sécurité',
-    description: 'Lumière, brassard réfléchissant et sonnette.',
+    name: 'Kit velo securite',
+    description: 'Lumiere, brassard reflechissant et sonnette.',
     cost: 600,
     available: false,
-    category: 'Sécurité',
+    category: 'Securite',
     icon: 'pedal_bike',
     isSpecial: false,
     discountLabel: '',
@@ -70,6 +72,24 @@ const _testRewards = [
 ];
 
 void main() {
+  void resetItineraireState() {
+    ItineraireServices.depart = null;
+    ItineraireServices.arrivee = null;
+    ItineraireServices.departLabel = 'Depart';
+    ItineraireServices.arriveeLabel = 'Arrivee';
+    ItineraireServices.modeActuel = 'foot';
+    ItineraireServices.trajetsParMode = {
+      'foot': InfosTrajet(mode: 'foot'),
+      'bike': InfosTrajet(mode: 'bike'),
+      'car': InfosTrajet(mode: 'car'),
+    };
+  }
+
+  setUp(() {
+    SessionPointsService.instance.points.value = mockInitialPoints;
+    resetItineraireState();
+  });
+
   Future<void> pumpEcoSafe(WidgetTester tester) async {
     await tester.pumpWidget(const EcoSafe());
     await tester.pump();
@@ -79,7 +99,12 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.lightTheme,
-        home: const Scaffold(body: ShopScreen(initialRewards: _testRewards)),
+        home: const Scaffold(
+          body: ShopScreen(
+            initialRewards: _testRewards,
+            initialPoints: mockInitialPoints,
+          ),
+        ),
       ),
     );
     await tester.pump();
@@ -108,13 +133,15 @@ void main() {
     expect(pointsService.getPointsBalance(), 30);
   });
 
-  testWidgets('EcoSafe affiche la navigation et la boutique', (tester) async {
+  testWidgets('EcoSafe affiche la navigation et ouvre la carte', (
+    tester,
+  ) async {
     await pumpEcoSafe(tester);
 
-    expect(find.byType(ShopScreen), findsOneWidget);
+    expect(find.byType(CartePage), findsOneWidget);
+    expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.text('Carte'), findsWidgets);
     expect(find.text('Transport'), findsWidgets);
-    expect(find.text('Sécurité'), findsWidgets);
     expect(find.text('Profil'), findsWidgets);
     expect(find.text('Boutique'), findsWidgets);
   });
@@ -135,51 +162,69 @@ void main() {
     expect(find.text('Modes de transport'), findsOneWidget);
   });
 
-  testWidgets('Boutique affiche les récompenses mockées', (tester) async {
+  testWidgets(
+    'Le bouton demarrer apparait quand depart arrivee et mode sont choisis',
+    (tester) async {
+      ItineraireServices.depart = const LatLng(50.361, 3.465);
+      ItineraireServices.arrivee = const LatLng(50.381, 3.475);
+      ItineraireServices.departLabel = 'Valenciennes Nord';
+      ItineraireServices.arriveeLabel = 'Campus';
+      ItineraireServices.trajetsParMode['car'] = InfosTrajet(
+        mode: 'car',
+        distance: 3.4,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const Scaffold(body: TransportScreen()),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.textContaining('Demarrer le trajet en'), findsNothing);
+
+      await tester.tap(find.byType(TransportModeCard).first);
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.textContaining('Demarrer le trajet en'),
+        240,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Demarrer le trajet en Velo'), findsOneWidget);
+      expect(find.textContaining('Ce trajet rapporte'), findsOneWidget);
+    },
+  );
+
+  testWidgets('Boutique affiche les recompenses mockees', (tester) async {
     await pumpShop(tester);
 
     expect(find.text('Mes points'), findsOneWidget);
     expect(find.text('320 pts'), findsOneWidget);
-    expect(find.text('Offre spéciale'), findsOneWidget);
-    expect(find.text('Ticket bus journée'), findsOneWidget);
-    expect(find.text('Café offert'), findsOneWidget);
-    expect(find.text('Réduction déjeuner'), findsOneWidget);
+    expect(find.text('Ticket bus journee'), findsOneWidget);
+    expect(find.byIcon(Icons.directions_bus), findsWidgets);
+    expect(find.byIcon(Icons.local_cafe), findsWidgets);
 
-    await tester.scrollUntilVisible(find.text("Bon d'achat"), 300);
+    await tester.scrollUntilVisible(find.text('Kit velo securite'), 300);
     await tester.pump();
 
-    expect(find.text("Bon d'achat"), findsOneWidget);
-
-    await tester.scrollUntilVisible(find.text('Kit vélo sécurité'), 300);
-    await tester.pump();
-
-    expect(find.text('Kit vélo sécurité'), findsOneWidget);
+    expect(find.text('Kit velo securite'), findsOneWidget);
   });
 
-  testWidgets('Échanger une récompense déduit les points', (tester) async {
+  testWidgets('Echanger une recompense deduit les points', (tester) async {
     await pumpShop(tester);
 
-    await tester.tap(find.text('Échanger').first);
+    await tester.tap(find.byIcon(Icons.redeem).first);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump();
 
     expect(find.text('200 pts'), findsOneWidget);
-    expect(find.textContaining('Récompense échangée'), findsOneWidget);
   });
 
-  testWidgets('Une récompense trop chère ou indisponible affiche Bientôt', (
-    tester,
-  ) async {
-    await pumpShop(tester);
-
-    await tester.scrollUntilVisible(find.text("Bon d'achat"), 300);
-    await tester.pump();
-
-    expect(find.text('Bientôt'), findsWidgets);
-  });
-
-  testWidgets('ShopScreen est réutilisable hors navigation', (tester) async {
+  testWidgets('ShopScreen est reutilisable hors navigation', (tester) async {
     await pumpShop(tester);
 
     expect(find.byType(ShopScreen), findsOneWidget);

@@ -28,7 +28,6 @@ Future<void> _initializeFirebase() async {
 
 class EcoSafe extends StatelessWidget {
   const EcoSafe({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

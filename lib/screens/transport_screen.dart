@@ -1,7 +1,7 @@
-import 'package:devmobile/fonctionnalites/carte/itineraire_services.dart';
 import 'package:devmobile/modeles/historique_trajets.dart';
 import 'package:devmobile/modeles/infos_trajets.dart';
-import 'package:devmobile/points_service.dart';
+import 'package:devmobile/services/itineraire_service.dart';
+import 'package:devmobile/services/points_service.dart';
 import 'package:devmobile/services/route_history_service.dart';
 import 'package:devmobile/services/session_points_service.dart';
 import 'package:flutter/material.dart';
@@ -81,12 +81,6 @@ class TransportMode {
   }
 }
 
-const DonneesTrajet trajetExemple = DonneesTrajet(
-  depart: '123 Rue de la Paix',
-  arrivee: '45 Avenue des Champs',
-  distanceKm: 5,
-);
-
 const List<TransportMode> transportsMock = [
   TransportMode(
     nom: 'Velo',
@@ -135,7 +129,6 @@ List<TransportMode> calculerOptionsTransport({
 
   final options = transports.map((transport) {
     final co2Total = transport.co2ParKm * trajet.distanceKm;
-
     final points = pointsService.calculatePoints(
       DonneesCalculPoints(
         co2Mode: co2Total,
@@ -556,9 +549,9 @@ class _TransportScreenState extends State<TransportScreen> {
   String _nomModeHistorique(String nom) {
     switch (nom) {
       case 'Velo':
-        return 'vélo';
+        return 'velo';
       case 'Metro':
-        return 'métro';
+        return 'metro';
       case 'Bus':
         return 'bus';
       case 'Voiture':

@@ -1,12 +1,12 @@
-import 'package:devmobile/fonctionnalites/carte/carte_page.dart';
+import 'package:devmobile/screens/carte_screen.dart';
 import 'package:devmobile/screens/profile_screen.dart';
 import 'package:devmobile/screens/safety_screen.dart';
 import 'package:devmobile/screens/shop_screen.dart';
-import 'package:devmobile/transport_screen.dart';
+import 'package:devmobile/screens/transport_screen.dart';
 import 'package:flutter/material.dart';
 
 class TabNav extends StatefulWidget {
-  const TabNav({super.key, this.initialIndex = 4});
+  const TabNav({super.key, this.initialIndex = 0});
 
   final int initialIndex;
 

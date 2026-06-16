@@ -1,6 +1,6 @@
-import 'package:devmobile/fonctionnalites/carte/itineraire_services.dart';
+import 'package:devmobile/services/itineraire_service.dart';
 import 'package:devmobile/modeles/infos_trajets.dart';
-import 'package:devmobile/theme.dart';
+import 'package:devmobile/config/theme.dart';
 import 'package:flutter/material.dart';
 
 Widget bandeauInfosTrajet() {

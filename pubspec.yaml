@@ -10,7 +10,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
   cloud_firestore: ^4.17.0
   cupertino_icons: ^1.0.8
   firebase_core: ^2.32.0
@@ -25,12 +24,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true
-
   assets:
     - assets/data/security_zones.json
     - lib/data/rewards.json

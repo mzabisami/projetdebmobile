@@ -1,16 +1,17 @@
-import 'package:devmobile/fonctionnalites/carte/itineraire_services.dart';
-import 'package:devmobile/fonctionnalites/carte/widgets/barre_mode_transport.dart';
-import 'package:devmobile/fonctionnalites/carte/widgets/barre_zoom.dart';
-import 'package:devmobile/fonctionnalites/carte/widgets/carte.dart';
-import 'package:devmobile/fonctionnalites/carte/widgets/typeahead.dart';
-import 'package:devmobile/fonctionnalites/carte/widgets/bandeau_infos_trajet.dart';
-import 'package:devmobile/composants/btn_icon_action.dart';
+import 'package:devmobile/services/itineraire_service.dart';
+import 'package:devmobile/screens/carte_widgets/barre_mode_transport.dart';
+import 'package:devmobile/screens/carte_widgets/barre_zoom.dart';
+import 'package:devmobile/screens/carte_widgets/carte.dart';
+import 'package:devmobile/screens/carte_widgets/typeahead.dart';
+import 'package:devmobile/screens/carte_widgets/bandeau_infos_trajet.dart';
+import 'package:devmobile/screens/carte_widgets/btn_icon_action.dart';
 import 'package:devmobile/modeles/zone_danger.dart';
+import 'package:devmobile/services/security_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
-import '../../theme.dart';
+import 'package:devmobile/config/theme.dart';
 
 class CartePage extends StatefulWidget {
   const CartePage({super.key});
@@ -24,11 +25,47 @@ class _CartePageState extends State<CartePage> {
   final TextEditingController _departController = TextEditingController();
   final TextEditingController _arriveeController = TextEditingController();
 
-  List<ZoneDanger> zonesDanger = [
-    ZoneDanger(LatLng(50.381, 3.475), 200, 1),
-    ZoneDanger(LatLng(50.361, 3.485), 200, 2),
-    ZoneDanger(LatLng(50.374, 3.465), 300, 3),
-  ];
+  List<ZoneDanger> zonesDanger = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _chargerZonesDanger();
+  }
+
+  Future<void> _chargerZonesDanger() async {
+    final service = SecurityService();
+    await service.loadZones();
+    final List<Future<ZoneDanger>> futures = service.getZones().map((
+      zoneSecu,
+    ) async {
+      double score = await service.getScoreForPosition(
+        zoneSecu.latitude,
+        zoneSecu.longitude,
+      );
+      int niv;
+      if (score < 40) {
+        niv = 1;
+      } else if (score < 80) {
+        niv = 2;
+      } else {
+        niv = 3;
+      }
+      return ZoneDanger(
+        LatLng(zoneSecu.latitude, zoneSecu.longitude),
+        20000,
+        niv,
+      );
+    }).toList();
+
+    final List<ZoneDanger> zones = await Future.wait(futures);
+
+    if (mounted) {
+      setState(() {
+        zonesDanger = zones;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -194,7 +231,7 @@ class _CartePageState extends State<CartePage> {
         title: const Text(
           'EcoSafe',
           style: TextStyle(
-            color: AppColors.text,
+            color: Colors.white,
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
