@@ -26,6 +26,7 @@ class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
+      splashFactory: InkRipple.splashFactory,
       colorScheme: baseScheme.copyWith(
         primary: AppColors.primary,
         secondary: AppColors.secondary,

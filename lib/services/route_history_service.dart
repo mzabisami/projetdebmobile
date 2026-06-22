@@ -3,9 +3,8 @@ import '../modeles/historique_trajets.dart';
 import 'user_profile_service.dart';
 
 class RouteHistoryService {
-  final CollectionReference _collection = FirebaseFirestore.instance.collection(
-    'routes',
-  );
+  CollectionReference get _collection =>
+      FirebaseFirestore.instance.collection('routes');
 
   final UserProfileService _profileService = UserProfileService();
 

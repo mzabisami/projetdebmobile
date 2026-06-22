@@ -2,10 +2,9 @@ import 'dart:convert';
 
 import 'package:devmobile/config/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
-
-import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 class Typeahead extends StatelessWidget {
   final String texte;
@@ -30,22 +29,10 @@ class Typeahead extends StatelessWidget {
         leading: GestureDetector(onTap: onClick, child: icon),
         title: TypeAheadField<dynamic>(
           controller: textController,
-          emptyBuilder: (context) => const SizedBox.shrink(),
-          suggestionsCallback: (search) async {
-            final url = Uri.parse(
-              'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(search)}&format=json&limit=5',
-            );
-            try {
-              final response = await http.get(url);
-              if (response.statusCode == 200) {
-                final List<dynamic> data = json.decode(response.body);
-                return data;
-              }
-            } catch (e) {
-              debugPrint('Erreur lors de la recherche de la ville : $e');
-            }
-            return [];
-          },
+          constraints: const BoxConstraints(maxHeight: 280),
+          hideOnEmpty: true,
+          hideOnError: true,
+          suggestionsCallback: _chercherLieux,
           builder: (context, controller, focusNode) {
             return TextField(
               controller: controller,
@@ -59,6 +46,7 @@ class Typeahead extends StatelessWidget {
           },
           itemBuilder: (context, suggestion) {
             return ListTile(
+              leading: const Icon(Icons.place_outlined),
               title: Text(
                 suggestion['display_name'] ?? '',
                 maxLines: 2,
@@ -71,10 +59,47 @@ class Typeahead extends StatelessWidget {
             final lon = double.parse(suggestion['lon']);
             final lieu = suggestion['display_name'] ?? '';
 
-            onSelected!(LatLng(lat, lon), lieu);
+            onSelected?.call(LatLng(lat, lon), lieu);
           },
         ),
       ),
     );
+  }
+
+  Future<List<dynamic>> _chercherLieux(String search) async {
+    final recherche = search.trim();
+    if (recherche.length < 2) {
+      return [];
+    }
+
+    final url = Uri.parse(
+      'https://nominatim.openstreetmap.org/search'
+      '?q=${Uri.encodeComponent(recherche)}'
+      '&format=json'
+      '&addressdetails=1'
+      '&accept-language=fr'
+      '&limit=5',
+    );
+
+    try {
+      final response = await http.get(
+        url,
+        headers: const {
+          'User-Agent': 'EcoSafe/1.0 (com.example.devmobile)',
+          'Accept': 'application/json',
+        },
+      );
+      if (response.statusCode == 200) {
+        return json.decode(response.body) as List<dynamic>;
+      }
+
+      debugPrint(
+        'Recherche lieu refusee (${response.statusCode}) : ${response.body}',
+      );
+    } catch (e) {
+      debugPrint('Erreur lors de la recherche de la ville : $e');
+    }
+
+    return [];
   }
 }

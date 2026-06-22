@@ -37,7 +37,7 @@ class ItineraireServices {
     );
 
     try {
-      final response = await http.get(url);
+      final response = await http.get(url, headers: _headers);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data.isNotEmpty) {
@@ -58,7 +58,7 @@ class ItineraireServices {
       'https://nominatim.openstreetmap.org/reverse?format=json&lat=${point.latitude}&lon=${point.longitude}',
     );
     try {
-      final response = await http.get(url);
+      final response = await http.get(url, headers: _headers);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return data['display_name'] ?? '';
@@ -84,7 +84,7 @@ class ItineraireServices {
       );
 
       try {
-        final response = await http.get(url);
+        final response = await http.get(url, headers: _headers);
         if (response.statusCode == 200) {
           final data = json.decode(response.body);
           if (data['routes'] != null && data['routes'].isNotEmpty) {
@@ -107,4 +107,9 @@ class ItineraireServices {
       }
     }
   }
+
+  static const Map<String, String> _headers = {
+    'User-Agent': 'EcoSafe/1.0 (com.example.devmobile)',
+    'Accept': 'application/json',
+  };
 }

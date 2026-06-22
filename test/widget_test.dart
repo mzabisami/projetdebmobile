@@ -198,6 +198,51 @@ void main() {
     },
   );
 
+  testWidgets('Le bouton demarrer lance le trajet et credite les points', (
+    tester,
+  ) async {
+    ItineraireServices.depart = const LatLng(50.361, 3.465);
+    ItineraireServices.arrivee = const LatLng(50.381, 3.475);
+    ItineraireServices.departLabel = 'Valenciennes Nord';
+    ItineraireServices.arriveeLabel = 'Campus';
+    ItineraireServices.trajetsParMode['car'] = InfosTrajet(
+      mode: 'car',
+      distance: 3.4,
+    );
+
+    var trajetLance = false;
+    final soldeInitial = SessionPointsService.instance.points.value;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.lightTheme,
+        home: Scaffold(
+          body: TransportScreen(
+            onStartTrip: () {
+              trajetLance = true;
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byType(TransportModeCard).first);
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Demarrer le trajet en Velo'),
+      240,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Demarrer le trajet en Velo'));
+    await tester.pump();
+
+    expect(trajetLance, isTrue);
+    expect(SessionPointsService.instance.points.value, soldeInitial + 40);
+    expect(ItineraireServices.modeActuel, 'bike');
+    expect(find.textContaining('Trajet lance en Velo'), findsOneWidget);
+  });
+
   testWidgets('Boutique affiche les recompenses mockees', (tester) async {
     await pumpShop(tester);
 

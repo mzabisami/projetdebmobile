@@ -2,9 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../modeles/profil_utilisateur.dart';
 
 class UserProfileService {
-  final CollectionReference _collection = FirebaseFirestore.instance.collection(
-    'users',
-  );
+  CollectionReference get _collection =>
+      FirebaseFirestore.instance.collection('users');
 
   // Crée ou écrase le document profil dans Firestore
   Future<void> saveUserProfile(UserProfile profile) async {
